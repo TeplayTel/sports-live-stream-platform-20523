@@ -105,15 +105,49 @@ const VideoPlayer = ({ currentMatch }) => {
   }, [isPlaying]);
 
   const handleEmojiReaction = (emojiData) => {
-    // Create flying emoji animation
+    // Create dynamic flying emoji animation with randomized trajectory
+    const trajectoryType = Math.random();
+    let trajectory = {};
+    
+    if (trajectoryType < 0.33) {
+      // Arc trajectory - parabolic curve
+      trajectory = {
+        x: Math.random() * 60 + 20, // 20-80% from left
+        y: Math.random() * 40 + 20, // 20-60% from top
+        trajectory: 'arc',
+        arcDirection: Math.random() > 0.5 ? 'left' : 'right',
+        arcHeight: 80 + Math.random() * 40, // Arc height variation
+      };
+    } else if (trajectoryType < 0.66) {
+      // Spiral trajectory
+      trajectory = {
+        x: Math.random() * 70 + 15, // 15-85% from left
+        y: Math.random() * 50 + 25, // 25-75% from top
+        trajectory: 'spiral',
+        spiralDirection: Math.random() > 0.5 ? 'clockwise' : 'counterclockwise',
+        spiralRadius: 30 + Math.random() * 20,
+      };
+    } else {
+      // Zigzag trajectory
+      trajectory = {
+        x: Math.random() * 60 + 20, // 20-80% from left
+        y: Math.random() * 40 + 30, // 30-70% from top
+        trajectory: 'zigzag',
+        zigzagAmplitude: 20 + Math.random() * 15,
+        zigzagFrequency: 2 + Math.random() * 2,
+      };
+    }
+
     const newFlyingReaction = {
       id: Date.now() + Math.random(),
       emoji: emojiData.emoji,
       color: emojiData.color,
-      x: Math.random() * 70 + 15, // 15-85% from left
-      y: Math.random() * 50 + 30, // 30-80% from top
+      ...trajectory,
       rotation: Math.random() * 360,
-      scale: 0.8 + Math.random() * 0.4 // 0.8-1.2 scale
+      rotationSpeed: (Math.random() - 0.5) * 720, // -360 to 360 degrees per animation
+      scale: 0.9 + Math.random() * 0.4, // 0.9-1.3 scale
+      duration: 2500 + Math.random() * 1000, // 2.5-3.5s duration variation
+      opacity: 0.9 + Math.random() * 0.1, // Slight opacity variation
     };
     
     setFlyingReactions(prev => [...prev, newFlyingReaction]);
@@ -127,13 +161,13 @@ const VideoPlayer = ({ currentMatch }) => {
     // Update global count (simulate websocket)
     setGlobalReactionCount(prev => prev + 1);
     
-    // Remove flying emoji after animation
+    // Remove flying emoji after animation with dynamic duration
     setTimeout(() => {
       setFlyingReactions(prev => prev.filter(r => r.id !== newFlyingReaction.id));
-    }, 3000);
+    }, newFlyingReaction.duration);
 
     // Log reaction for mock websocket
-    console.log(`Reaction sent: ${emojiData.name} - Global count: ${globalReactionCount + 1}`);
+    console.log(`Reaction sent: ${emojiData.name} (${trajectory.trajectory}) - Global count: ${globalReactionCount + 1}`);
   };
 
   const togglePlayPause = () => {
@@ -194,37 +228,145 @@ const VideoPlayer = ({ currentMatch }) => {
           Your browser does not support the video tag.
         </video>
         
-        {/* Flying Emoji Animations */}
-        {flyingReactions.map((reaction) => (
-          <div
-            key={reaction.id}
-            className="absolute pointer-events-none z-30"
-            style={{
-              left: `${reaction.x}%`,
-              top: `${reaction.y}%`,
-              color: reaction.color,
-              fontSize: '2rem',
-              transform: `rotate(${reaction.rotation}deg) scale(${reaction.scale})`,
-              animation: 'emoji-fly 3s ease-out forwards',
-              textShadow: '0 0 20px currentColor, 0 0 40px currentColor',
-              filter: 'drop-shadow(0 0 10px currentColor)'
+        {/* Dynamic Flying Emoji Animations */}
+        {flyingReactions.map((reaction) => {
+          let animationName = 'emoji-fly';
+          let animationKeyframes = '';
+          
+          // Generate custom keyframes based on trajectory type
+          if (reaction.trajectory === 'arc') {
+            const direction = reaction.arcDirection === 'left' ? -1 : 1;
+            animationKeyframes = `
+              @keyframes emoji-arc-${reaction.id} {
+                0% { 
+                  transform: translateY(0) translateX(0) scale(${reaction.scale * 0.8}) rotate(${reaction.rotation}deg);
+                  opacity: ${reaction.opacity};
+                }
+                25% { 
+                  transform: translateY(-${reaction.arcHeight * 0.4}px) translateX(${direction * 40}px) scale(${reaction.scale * 1.1}) rotate(${reaction.rotation + reaction.rotationSpeed * 0.25}deg);
+                  opacity: ${reaction.opacity * 0.9};
+                }
+                50% { 
+                  transform: translateY(-${reaction.arcHeight * 0.8}px) translateX(${direction * 60}px) scale(${reaction.scale * 1.3}) rotate(${reaction.rotation + reaction.rotationSpeed * 0.5}deg);
+                  opacity: ${reaction.opacity * 0.7};
+                }
+                75% { 
+                  transform: translateY(-${reaction.arcHeight}px) translateX(${direction * 40}px) scale(${reaction.scale * 1.1}) rotate(${reaction.rotation + reaction.rotationSpeed * 0.75}deg);
+                  opacity: ${reaction.opacity * 0.4};
+                }
+                100% { 
+                  transform: translateY(-${reaction.arcHeight + 40}px) translateX(${direction * 20}px) scale(${reaction.scale * 0.6}) rotate(${reaction.rotation + reaction.rotationSpeed}deg);
+                  opacity: 0;
+                }
+              }
+            `;
+            animationName = `emoji-arc-${reaction.id}`;
+          } else if (reaction.trajectory === 'spiral') {
+            const direction = reaction.spiralDirection === 'clockwise' ? 1 : -1;
+            animationKeyframes = `
+              @keyframes emoji-spiral-${reaction.id} {
+                0% { 
+                  transform: translateY(0) translateX(0) scale(${reaction.scale * 0.8}) rotate(${reaction.rotation}deg);
+                  opacity: ${reaction.opacity};
+                }
+                25% { 
+                  transform: translateY(-40px) translateX(${direction * reaction.spiralRadius * 0.7}px) scale(${reaction.scale * 1.1}) rotate(${reaction.rotation + direction * 90}deg);
+                  opacity: ${reaction.opacity * 0.9};
+                }
+                50% { 
+                  transform: translateY(-80px) translateX(0px) scale(${reaction.scale * 1.3}) rotate(${reaction.rotation + direction * 180}deg);
+                  opacity: ${reaction.opacity * 0.7};
+                }
+                75% { 
+                  transform: translateY(-120px) translateX(${-direction * reaction.spiralRadius * 0.7}px) scale(${reaction.scale * 1.1}) rotate(${reaction.rotation + direction * 270}deg);
+                  opacity: ${reaction.opacity * 0.4};
+                }
+                100% { 
+                  transform: translateY(-160px) translateX(0px) scale(${reaction.scale * 0.6}) rotate(${reaction.rotation + direction * 360}deg);
+                  opacity: 0;
+                }
+              }
+            `;
+            animationName = `emoji-spiral-${reaction.id}`;
+          } else if (reaction.trajectory === 'zigzag') {
+            animationKeyframes = `
+              @keyframes emoji-zigzag-${reaction.id} {
+                0% { 
+                  transform: translateY(0) translateX(0) scale(${reaction.scale * 0.8}) rotate(${reaction.rotation}deg);
+                  opacity: ${reaction.opacity};
+                }
+                20% { 
+                  transform: translateY(-30px) translateX(${reaction.zigzagAmplitude}px) scale(${reaction.scale * 1.0}) rotate(${reaction.rotation + reaction.rotationSpeed * 0.2}deg);
+                  opacity: ${reaction.opacity * 0.9};
+                }
+                40% { 
+                  transform: translateY(-60px) translateX(-${reaction.zigzagAmplitude}px) scale(${reaction.scale * 1.2}) rotate(${reaction.rotation + reaction.rotationSpeed * 0.4}deg);
+                  opacity: ${reaction.opacity * 0.8};
+                }
+                60% { 
+                  transform: translateY(-90px) translateX(${reaction.zigzagAmplitude * 0.7}px) scale(${reaction.scale * 1.3}) rotate(${reaction.rotation + reaction.rotationSpeed * 0.6}deg);
+                  opacity: ${reaction.opacity * 0.6};
+                }
+                80% { 
+                  transform: translateY(-120px) translateX(-${reaction.zigzagAmplitude * 0.5}px) scale(${reaction.scale * 1.1}) rotate(${reaction.rotation + reaction.rotationSpeed * 0.8}deg);
+                  opacity: ${reaction.opacity * 0.3};
+                }
+                100% { 
+                  transform: translateY(-150px) translateX(0px) scale(${reaction.scale * 0.6}) rotate(${reaction.rotation + reaction.rotationSpeed}deg);
+                  opacity: 0;
+                }
+              }
+            `;
+            animationName = `emoji-zigzag-${reaction.id}`;
+          }
+
+          return (
+            <React.Fragment key={reaction.id}>
+              {/* Inject custom keyframes */}
+              {animationKeyframes && (
+                <style key={`style-${reaction.id}`}>
+                  {animationKeyframes}
+                </style>
+              )}
+              <div
+                className="absolute pointer-events-none z-30"
+                style={{
+                  left: `${reaction.x}%`,
+                  top: `${reaction.y}%`,
+                  color: reaction.color,
+                  fontSize: '2rem',
+                  animation: `${animationName} ${reaction.duration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`,
+                  textShadow: `0 0 20px ${reaction.color}, 0 0 40px ${reaction.color}, 0 0 60px ${reaction.color}40`,
+                  filter: `drop-shadow(0 0 15px ${reaction.color}) brightness(1.2)`,
+                  willChange: 'transform, opacity',
+                  backfaceVisibility: 'hidden'
+                }}
+              >
+                {reaction.emoji}
+              </div>
+            </React.Fragment>
+          );
+        })}
+
+        {/* Responsive Emoji Reaction Bar - 40-50% width, above controls */}
+        {(showEmojiBar || showControls) && (
+          <div 
+            className="absolute left-1/2 transform -translate-x-1/2 z-35 pointer-events-none slide-in-down transition-all duration-300 ease-out"
+            style={{ 
+              bottom: showControls ? '90px' : '20px', // Dynamic positioning based on controls
+              width: '45%', // 45% of video player width
+              minWidth: '320px', // Minimum width for mobile
+              maxWidth: '480px' // Maximum width for larger screens
             }}
           >
-            {reaction.emoji}
-          </div>
-        ))}
-
-        {/* Bottom Emoji Reaction Bar Overlay - Above Seekbar */}
-        {showEmojiBar && (
-          <div 
-            className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-35 pointer-events-none slide-in-down"
-            style={{ bottom: '80px' }} // Position above controls
-          >
             <div 
-              className="bg-black/70 backdrop-blur-sm px-4 py-2 flex items-center gap-3 pointer-events-auto"
+              className="bg-black/80 backdrop-blur-md px-4 py-3 flex items-center justify-center gap-2 pointer-events-auto shadow-2xl border border-white/10"
               style={{ 
-                borderRadius: '12px',
-                width: 'fit-content'
+                borderRadius: '16px',
+                width: '100%',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                opacity: showEmojiBar ? 1 : (showControls ? 0.7 : 0),
+                transform: showEmojiBar ? 'scale(1)' : 'scale(0.95)'
               }}
               onMouseEnter={() => setShowEmojiBar(true)}
               onMouseLeave={() => setShowEmojiBar(false)}
@@ -233,78 +375,104 @@ const VideoPlayer = ({ currentMatch }) => {
                 <button
                   key={index}
                   onClick={() => handleEmojiReaction(emoji)}
-                  className="group relative flex items-center gap-1 px-2 py-1 rounded-md transition-all duration-200 hover:bg-white/10 active:scale-95"
+                  className="group relative flex flex-col items-center justify-center px-2 py-2 rounded-lg transition-all duration-300 hover:bg-white/15 active:scale-90 hover:shadow-lg"
                   style={{ 
-                    animationDelay: `${index * 0.1}s`,
-                    borderRadius: '6px',
-                    minHeight: '32px',
-                    minWidth: '32px'
+                    animationDelay: `${index * 0.08}s`,
+                    borderRadius: '10px',
+                    minHeight: '52px',
+                    minWidth: '48px',
+                    background: 'transparent',
+                    border: '1px solid transparent',
+                    flex: '1 1 0'
                   }}
                   title={`React with ${emoji.name}`}
                   aria-label={`React with ${emoji.name}, current count: ${emojiCounts[emoji.name]}`}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = `${emoji.color}60`;
+                    e.currentTarget.style.backgroundColor = `${emoji.color}10`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'transparent';
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                 >
                   <span 
-                    className="transition-all duration-150 group-hover:scale-110"
+                    className="transition-all duration-200 group-hover:scale-125 group-active:scale-110"
                     style={{ 
-                      fontSize: '24px',
+                      fontSize: 'clamp(20px, 2.5vw, 26px)', // Responsive emoji size
                       lineHeight: '1',
-                      filter: `drop-shadow(0 0 8px ${emoji.color}40)`
+                      filter: `drop-shadow(0 0 10px ${emoji.color}60) drop-shadow(0 0 20px ${emoji.color}30)`,
+                      marginBottom: '2px'
                     }}
                   >
                     {emoji.emoji}
                   </span>
                   
                   <span 
-                    className="text-white text-sm font-medium transition-all duration-200"
+                    className="text-white font-semibold transition-all duration-200 group-hover:text-opacity-100"
                     style={{ 
-                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
-                      fontSize: '14px',
-                      fontWeight: '500'
+                      textShadow: '0 1px 3px rgba(0, 0, 0, 0.7)',
+                      fontSize: 'clamp(11px, 1.2vw, 13px)', // Responsive text size
+                      fontWeight: '600',
+                      opacity: '0.95'
                     }}
                   >
                     {emojiCounts[emoji.name]}
                   </span>
                   
-                  {/* Hover glow effect */}
+                  {/* Enhanced hover glow effect */}
                   <div 
-                    className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-300"
+                    className="absolute inset-0 opacity-0 group-hover:opacity-40 transition-all duration-300 pointer-events-none"
                     style={{ 
-                      background: `radial-gradient(circle, ${emoji.color}40 0%, transparent 70%)`,
-                      borderRadius: '6px'
+                      background: `radial-gradient(circle at center, ${emoji.color}30 0%, ${emoji.color}15 40%, transparent 70%)`,
+                      borderRadius: '10px',
+                      transform: 'scale(1.1)',
+                      filter: 'blur(2px)'
                     }}
                   />
                 </button>
               ))}
               
-              {/* Total Reaction Count */}
-              <div className="flex items-center gap-2 ml-2 pl-3 border-l border-white/30">
-                <div className="w-2 h-2 bg-accent-green rounded-full animate-pulse" />
-                <span 
-                  className="text-white font-medium"
-                  style={{ 
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
-                  }}
-                >
-                  {globalReactionCount.toLocaleString()}
-                </span>
-                <span 
-                  className="text-white/60 hidden sm:inline"
-                  style={{ fontSize: '12px' }}
-                >
-                  reactions
-                </span>
+              {/* Total Reaction Count - Responsive */}
+              <div className="flex items-center gap-2 ml-3 pl-3 border-l border-white/30">
+                <div className="w-2 h-2 bg-accent-green rounded-full animate-pulse shadow-sm" />
+                <div className="flex flex-col items-center">
+                  <span 
+                    className="text-white font-bold leading-none"
+                    style={{ 
+                      fontSize: 'clamp(12px, 1.3vw, 14px)',
+                      fontWeight: '700',
+                      textShadow: '0 1px 3px rgba(0, 0, 0, 0.7)'
+                    }}
+                  >
+                    {globalReactionCount.toLocaleString()}
+                  </span>
+                  <span 
+                    className="text-white/70 text-center leading-none mt-0.5"
+                    style={{ fontSize: 'clamp(9px, 1vw, 11px)' }}
+                  >
+                    reactions
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Video Player Controls Container */}
-        <div className={`absolute bottom-0 left-0 right-0 z-30 transition-all duration-300 ${
-          showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-        }`}>
-          <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4">
+        {/* Video Player Controls Container - Unified with emoji bar */}
+        <div 
+          className={`absolute bottom-0 left-0 right-0 z-30 transition-all duration-300 ${
+            showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+          }`}
+          onMouseEnter={() => {
+            setShowControls(true);
+            setShowEmojiBar(true);
+          }}
+          onMouseLeave={() => {
+            // Don't immediately hide - let the timeout handle it
+          }}
+        >
+          <div className="bg-gradient-to-t from-black/95 via-black/70 to-transparent p-4 pt-8">
 
             {/* Progress Bar / Seekbar */}
             <div className="mb-4">
