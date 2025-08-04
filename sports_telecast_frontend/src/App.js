@@ -97,10 +97,7 @@ function App() {
 
       {/* Header */}
       <Header 
-        currentMatch={currentMatch}
         viewerCount={viewerCount}
-        theme={theme}
-        onThemeChange={setTheme}
       />
       
       {/* Main Content */}
