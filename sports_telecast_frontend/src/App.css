@@ -110,7 +110,47 @@ video::-webkit-media-controls {
   background-size: 800px 104px;
 }
 
-/* Floating Reactions Animation */
+/* Enhanced Flying Emoji Animation */
+@keyframes emoji-fly {
+  0% {
+    transform: translateY(0) scale(0.8) rotate(0deg);
+    opacity: 1;
+  }
+  25% {
+    transform: translateY(-30px) scale(1.2) rotate(180deg);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(-60px) scale(1.4) rotate(270deg);
+    opacity: 0.8;
+  }
+  75% {
+    transform: translateY(-90px) scale(1.1) rotate(360deg);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-120px) scale(0.6) rotate(450deg);
+    opacity: 0;
+  }
+}
+
+/* Slide in from top animation */
+@keyframes slide-in-down {
+  0% {
+    transform: translateX(-50%) translateY(-20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+.slide-in-down {
+  animation: slide-in-down 0.4s ease-out forwards;
+}
+
+/* Legacy float animation for compatibility */
 @keyframes float {
   0% {
     transform: translateY(0) scale(1);

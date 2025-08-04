@@ -2,9 +2,14 @@ import React, { useRef, useEffect, useState } from 'react';
 
 // PUBLIC_INTERFACE
 const VideoPlayer = ({ currentMatch }) => {
+  /**
+   * Enhanced video player component with sleek emoji reactions and real-time global count
+   * Features dummy video URL, hover-activated emoji bar, flying animations, and websocket reactions
+   */
   const videoRef = useRef(null);
-  const [showReactions, setShowReactions] = useState(false);
-  const [reactions, setReactions] = useState([]);
+  const wsRef = useRef(null);
+  const [showEmojiBar, setShowEmojiBar] = useState(false);
+  const [flyingReactions, setFlyingReactions] = useState([]);
   const [showControls, setShowControls] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.8);
@@ -12,17 +17,46 @@ const VideoPlayer = ({ currentMatch }) => {
   const [duration, setDuration] = useState(0);
   const [quality, setQuality] = useState('HD');
   const [showQualityMenu, setShowQualityMenu] = useState(false);
+  const [globalReactionCount, setGlobalReactionCount] = useState(2847);
   
   const emojis = [
-    { emoji: '❤️', color: '#ff1744' },
-    { emoji: '😂', color: '#ffeb3b' },
-    { emoji: '😮', color: '#2196f3' },
-    { emoji: '👏', color: '#4caf50' },
-    { emoji: '🔥', color: '#ff5722' },
-    { emoji: '⚽', color: '#ffffff' }
+    { emoji: '❤️', color: '#ff1744', name: 'love' },
+    { emoji: '😂', color: '#ffeb3b', name: 'laugh' },
+    { emoji: '😮', color: '#2196f3', name: 'wow' },
+    { emoji: '👏', color: '#4caf50', name: 'clap' },
+    { emoji: '🔥', color: '#ff5722', name: 'fire' },
+    { emoji: '⚽', color: '#ffffff', name: 'soccer' }
   ];
 
+  // Dummy video URL for testing
+  const dummyVideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+  
   const qualityOptions = ['4K', 'HD', '720p', '480p', 'Auto'];
+
+  // Mock WebSocket for real-time reaction updates
+  useEffect(() => {
+    // Simulate WebSocket connection
+    const connectWebSocket = () => {
+      console.log('Connecting to mock WebSocket for reactions...');
+      
+      // Simulate incoming reaction updates
+      const interval = setInterval(() => {
+        const randomChange = Math.floor(Math.random() * 10) - 5; // -5 to +5
+        setGlobalReactionCount(prev => Math.max(0, prev + randomChange));
+      }, 3000);
+
+      // Store cleanup function
+      wsRef.current = () => clearInterval(interval);
+    };
+
+    connectWebSocket();
+
+    return () => {
+      if (wsRef.current) {
+        wsRef.current();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -62,20 +96,30 @@ const VideoPlayer = ({ currentMatch }) => {
     };
   }, [isPlaying]);
 
-  const handleEmojiReaction = (emoji, color) => {
-    const newReaction = {
+  const handleEmojiReaction = (emojiData) => {
+    // Create flying emoji animation
+    const newFlyingReaction = {
       id: Date.now() + Math.random(),
-      emoji: emoji.emoji,
-      color,
-      x: Math.random() * 80 + 10,
-      y: Math.random() * 60 + 20
+      emoji: emojiData.emoji,
+      color: emojiData.color,
+      x: Math.random() * 70 + 15, // 15-85% from left
+      y: Math.random() * 50 + 30, // 30-80% from top
+      rotation: Math.random() * 360,
+      scale: 0.8 + Math.random() * 0.4 // 0.8-1.2 scale
     };
     
-    setReactions(prev => [...prev, newReaction]);
+    setFlyingReactions(prev => [...prev, newFlyingReaction]);
     
+    // Update global count (simulate websocket)
+    setGlobalReactionCount(prev => prev + 1);
+    
+    // Remove flying emoji after animation
     setTimeout(() => {
-      setReactions(prev => prev.filter(r => r.id !== newReaction.id));
+      setFlyingReactions(prev => prev.filter(r => r.id !== newFlyingReaction.id));
     }, 3000);
+
+    // Log reaction for mock websocket
+    console.log(`Reaction sent: ${emojiData.name} - Global count: ${globalReactionCount + 1}`);
   };
 
   const togglePlayPause = () => {
@@ -168,52 +212,81 @@ const VideoPlayer = ({ currentMatch }) => {
         <video
           ref={videoRef}
           className="w-full h-full object-cover"
-          poster="/api/placeholder/800/450"
-          onMouseEnter={() => setShowReactions(true)}
-          onMouseLeave={() => setShowReactions(false)}
+          poster="https://via.placeholder.com/800x450/1a1a1a/ffffff?text=Sports+Stream"
+          onMouseEnter={() => isPlaying && setShowEmojiBar(true)}
+          onMouseLeave={() => setShowEmojiBar(false)}
+          autoPlay
+          muted
+          loop
         >
-          <source src="/api/placeholder/video" type="video/mp4" />
+          <source src={dummyVideoUrl} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
         
-        {/* Hover Overlay for Reactions */}
-        <div className="absolute inset-0 z-20">
-          {/* Floating Reactions */}
-          {reactions.map((reaction) => (
-            <div
-              key={reaction.id}
-              className="absolute text-2xl pointer-events-none z-30"
-              style={{
-                left: `${reaction.x}%`,
-                top: `${reaction.y}%`,
-                color: reaction.color,
-                animation: 'float-up 3s ease-out forwards',
-                textShadow: '0 0 10px currentColor'
-              }}
-            >
-              {reaction.emoji}
-            </div>
-          ))}
+        {/* Flying Emoji Animations */}
+        {flyingReactions.map((reaction) => (
+          <div
+            key={reaction.id}
+            className="absolute pointer-events-none z-30"
+            style={{
+              left: `${reaction.x}%`,
+              top: `${reaction.y}%`,
+              color: reaction.color,
+              fontSize: '2rem',
+              transform: `rotate(${reaction.rotation}deg) scale(${reaction.scale})`,
+              animation: 'emoji-fly 3s ease-out forwards',
+              textShadow: '0 0 20px currentColor, 0 0 40px currentColor',
+              filter: 'drop-shadow(0 0 10px currentColor)'
+            }}
+          >
+            {reaction.emoji}
+          </div>
+        ))}
 
-          {/* Reaction Buttons */}
-          {showReactions && (
-            <div className="absolute bottom-20 right-4 flex flex-col space-y-2 slide-in-right">
+        {/* Sleek Emoji Reaction Bar */}
+        {showEmojiBar && isPlaying && (
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30">
+            <div className="bg-black/60 backdrop-blur-md rounded-full px-4 py-2 flex items-center space-x-3 border border-white/10 slide-in-down">
               {emojis.map((emoji, index) => (
                 <button
                   key={index}
-                  onClick={() => handleEmojiReaction(emoji, emoji.color)}
-                  className="glass-effect hover:bg-white/20 rounded-lg p-3 text-xl transition-all duration-200 hover-scale transform hover:rotate-12"
+                  onClick={() => handleEmojiReaction(emoji)}
+                  className="group relative p-2 rounded-full transition-all duration-300 hover:bg-white/20 hover:scale-110 active:scale-95"
                   style={{ 
-                    animationDelay: `${index * 0.05}s`,
-                    boxShadow: `0 0 20px ${emoji.color}40`
+                    animationDelay: `${index * 0.1}s`,
                   }}
+                  title={`React with ${emoji.name}`}
                 >
-                  {emoji.emoji}
+                  <span 
+                    className="text-xl transition-all duration-300 group-hover:drop-shadow-lg"
+                    style={{ 
+                      filter: `drop-shadow(0 0 8px ${emoji.color}40)`,
+                    }}
+                  >
+                    {emoji.emoji}
+                  </span>
+                  
+                  {/* Hover glow effect */}
+                  <div 
+                    className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-30 transition-opacity duration-300"
+                    style={{ 
+                      background: `radial-gradient(circle, ${emoji.color}40 0%, transparent 70%)`,
+                    }}
+                  />
                 </button>
               ))}
+              
+              {/* Global Reaction Count */}
+              <div className="flex items-center space-x-2 ml-4 pl-4 border-l border-white/20">
+                <div className="w-2 h-2 bg-accent-green rounded-full animate-pulse" />
+                <span className="text-white text-sm font-medium">
+                  {globalReactionCount.toLocaleString()}
+                </span>
+                <span className="text-white/60 text-xs">reactions</span>
+              </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Custom Video Controls */}
         <div className={`absolute bottom-0 left-0 right-0 z-25 transition-all duration-300 ${
@@ -292,29 +365,29 @@ const VideoPlayer = ({ currentMatch }) => {
             </div>
           </div>
         </div>
-      </div>
-      
-      {/* Match Info Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-6">
-        <div className="flex items-end justify-between text-white">
-          <div className="space-y-1">
-            <h3 className="text-xl font-bold">
-              {currentMatch.homeTeam} vs {currentMatch.awayTeam}
-            </h3>
-            <p className="text-sm text-gray-300 flex items-center space-x-2">
-              <span>{currentMatch.competition}</span>
-              <span>•</span>
-              <span className="flex items-center space-x-1">
-                <div className="w-2 h-2 bg-accent-green rounded-lg bounce-subtle"></div>
-                <span>Live</span>
-              </span>
-            </p>
-          </div>
-          <div className="text-right space-y-1">
-            <div className="text-3xl font-mono font-bold">
-              {currentMatch.homeScore} - {currentMatch.awayScore}
+
+        {/* Match Info Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-6">
+          <div className="flex items-end justify-between text-white">
+            <div className="space-y-1">
+              <h3 className="text-xl font-bold">
+                {currentMatch.homeTeam} vs {currentMatch.awayTeam}
+              </h3>
+              <p className="text-sm text-gray-300 flex items-center space-x-2">
+                <span>{currentMatch.competition}</span>
+                <span>•</span>
+                <span className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-accent-green rounded-lg bounce-subtle"></div>
+                  <span>Live</span>
+                </span>
+              </p>
             </div>
-            <div className="text-sm text-gray-300">{currentMatch.time}</div>
+            <div className="text-right space-y-1">
+              <div className="text-3xl font-mono font-bold">
+                {currentMatch.homeScore} - {currentMatch.awayScore}
+              </div>
+              <div className="text-sm text-gray-300">{currentMatch.time}</div>
+            </div>
           </div>
         </div>
       </div>
