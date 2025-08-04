@@ -26,6 +26,8 @@ const VideoPlayer = ({ currentMatch }) => {
     fire: 167,
     soccer: 95
   });
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
+  const [videoError, setVideoError] = useState(null);
   
   const emojis = [
     { emoji: '❤️', color: '#ff1744', name: 'love' },
@@ -74,23 +76,53 @@ const VideoPlayer = ({ currentMatch }) => {
     const updateDuration = () => setDuration(video.duration);
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
+    const handleError = (e) => {
+      console.error('Video error:', e);
+      setIsPlaying(false);
+      setVideoError('Failed to load video. Please try again.');
+      setIsVideoLoading(false);
+    };
+    const handleLoadStart = () => {
+      console.log('Video loading started');
+      setIsVideoLoading(true);
+      setVideoError(null);
+    };
+    const handleCanPlay = () => {
+      setIsVideoLoading(false);
+      setVideoError(null);
+    };
 
     video.addEventListener('timeupdate', updateTime);
     video.addEventListener('loadedmetadata', updateDuration);
     video.addEventListener('play', handlePlay);
     video.addEventListener('pause', handlePause);
+    video.addEventListener('error', handleError);
+    video.addEventListener('loadstart', handleLoadStart);
+    video.addEventListener('canplay', handleCanPlay);
 
-    // Auto-hide controls
+    // Auto-hide controls with improved logic
     let controlsTimeout;
     const resetControlsTimeout = () => {
       clearTimeout(controlsTimeout);
       setShowControls(true);
-      controlsTimeout = setTimeout(() => {
-        if (isPlaying) setShowControls(false);
-      }, 3000);
+      if (isPlaying) {
+        controlsTimeout = setTimeout(() => {
+          setShowControls(false);
+        }, 3000);
+      }
     };
 
-    video.addEventListener('mousemove', resetControlsTimeout);
+    const handleMouseMove = (e) => {
+      // Only reset if mouse is over video area, not emoji bar
+      const rect = video.getBoundingClientRect();
+      const isOverVideo = e.clientX >= rect.left && e.clientX <= rect.right && 
+                         e.clientY >= rect.top && e.clientY <= rect.bottom - 100; // Exclude bottom 100px for emoji bar
+      if (isOverVideo) {
+        resetControlsTimeout();
+      }
+    };
+
+    video.addEventListener('mousemove', handleMouseMove);
     video.addEventListener('click', resetControlsTimeout);
 
     return () => {
@@ -98,27 +130,37 @@ const VideoPlayer = ({ currentMatch }) => {
       video.removeEventListener('loadedmetadata', updateDuration);
       video.removeEventListener('play', handlePlay);
       video.removeEventListener('pause', handlePause);
-      video.removeEventListener('mousemove', resetControlsTimeout);
+      video.removeEventListener('error', handleError);
+      video.removeEventListener('loadstart', handleLoadStart);
+      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('mousemove', handleMouseMove);
       video.removeEventListener('click', resetControlsTimeout);
       clearTimeout(controlsTimeout);
     };
   }, [isPlaying]);
 
   const handleEmojiReaction = (emojiData) => {
-    // Create flying emoji animation
-    const newFlyingReaction = {
-      id: Date.now() + Math.random(),
-      emoji: emojiData.emoji,
-      color: emojiData.color,
-      x: Math.random() * 70 + 15, // 15-85% from left
-      y: Math.random() * 50 + 30, // 30-80% from top
-      rotation: Math.random() * 360,
-      scale: 0.8 + Math.random() * 0.4 // 0.8-1.2 scale
-    };
+    // Create multiple flying emoji for more dramatic effect
+    const numFlying = Math.random() > 0.7 ? 2 : 1; // 30% chance for double emoji
     
-    setFlyingReactions(prev => [...prev, newFlyingReaction]);
+    for (let i = 0; i < numFlying; i++) {
+      const newFlyingReaction = {
+        id: Date.now() + Math.random() + i,
+        emoji: emojiData.emoji,
+        color: emojiData.color,
+        x: Math.random() * 60 + 20, // 20-80% from left
+        y: Math.random() * 40 + 35, // 35-75% from top
+        rotation: Math.random() * 360,
+        scale: 0.9 + Math.random() * 0.6, // 0.9-1.5 scale
+        delay: i * 100 // Stagger multiple emojis
+      };
+      
+      setTimeout(() => {
+        setFlyingReactions(prev => [...prev, newFlyingReaction]);
+      }, newFlyingReaction.delay);
+    }
     
-    // Update individual emoji count
+    // Update individual emoji count with animation
     setEmojiCounts(prev => ({
       ...prev,
       [emojiData.name]: prev[emojiData.name] + 1
@@ -129,8 +171,15 @@ const VideoPlayer = ({ currentMatch }) => {
     
     // Remove flying emoji after animation
     setTimeout(() => {
-      setFlyingReactions(prev => prev.filter(r => r.id !== newFlyingReaction.id));
-    }, 3000);
+      setFlyingReactions(prev => prev.filter(r => 
+        !r.id.toString().startsWith(Date.now().toString().slice(0, -3))
+      ));
+    }, 4000);
+
+    // Add haptic feedback for mobile devices
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
 
     // Log reaction for mock websocket
     console.log(`Reaction sent: ${emojiData.name} - Global count: ${globalReactionCount + 1}`);
@@ -194,6 +243,43 @@ const VideoPlayer = ({ currentMatch }) => {
           Your browser does not support the video tag.
         </video>
         
+        {/* Loading Overlay */}
+        {isVideoLoading && (
+          <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-20">
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto"></div>
+              <p className="text-white text-lg font-medium">Loading stream...</p>
+            </div>
+          </div>
+        )}
+        
+        {/* Error Overlay */}
+        {videoError && (
+          <div className="absolute inset-0 bg-black/90 flex items-center justify-center z-20">
+            <div className="text-center space-y-4 max-w-md px-6">
+              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto">
+                <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-white text-xl font-bold mb-2">Stream Error</h3>
+                <p className="text-white/80 text-sm">{videoError}</p>
+              </div>
+              <button 
+                onClick={() => {
+                  setVideoError(null);
+                  setIsVideoLoading(true);
+                  videoRef.current?.load();
+                }}
+                className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        )}
+        
         {/* Flying Emoji Animations */}
         {flyingReactions.map((reaction) => (
           <div
@@ -214,91 +300,150 @@ const VideoPlayer = ({ currentMatch }) => {
           </div>
         ))}
 
-        {/* Bottom Emoji Reaction Bar Overlay - Above Seekbar */}
-        {showEmojiBar && (
+        {/* Enhanced Emoji Reaction Bar with Modern Design */}
+        <div 
+          className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 transition-all duration-500 ease-out ${
+            showEmojiBar ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+          }`}
+          style={{ 
+            bottom: '90px',
+            zIndex: 40,
+            pointerEvents: showEmojiBar ? 'auto' : 'none'
+          }}
+          onMouseEnter={() => setShowEmojiBar(true)}
+          onMouseLeave={() => setShowEmojiBar(false)}
+        >
           <div 
-            className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-35 pointer-events-none slide-in-down"
-            style={{ bottom: '80px' }} // Position above controls
+            className="bg-gradient-to-r from-black/80 via-black/90 to-black/80 backdrop-blur-lg border border-white/20 shadow-2xl"
+            style={{ 
+              borderRadius: '20px',
+              padding: '12px 20px',
+              background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(30,30,30,0.95) 50%, rgba(0,0,0,0.9) 100%)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1)',
+              backdropFilter: 'blur(20px)'
+            }}
           >
-            <div 
-              className="bg-black/70 backdrop-blur-sm px-4 py-2 flex items-center gap-3 pointer-events-auto"
-              style={{ 
-                borderRadius: '12px',
-                width: 'fit-content'
-              }}
-              onMouseEnter={() => setShowEmojiBar(true)}
-              onMouseLeave={() => setShowEmojiBar(false)}
-            >
+            <div className="flex items-center gap-2">
               {emojis.map((emoji, index) => (
                 <button
                   key={index}
                   onClick={() => handleEmojiReaction(emoji)}
-                  className="group relative flex items-center gap-1 px-2 py-1 rounded-md transition-all duration-200 hover:bg-white/10 active:scale-95"
+                  className="group relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-300 hover:bg-white/15 active:scale-90 hover:scale-105"
                   style={{ 
-                    animationDelay: `${index * 0.1}s`,
-                    borderRadius: '6px',
-                    minHeight: '32px',
-                    minWidth: '32px'
+                    animationDelay: `${index * 0.05}s`,
+                    minHeight: '60px',
+                    minWidth: '50px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)'
                   }}
                   title={`React with ${emoji.name}`}
                   aria-label={`React with ${emoji.name}, current count: ${emojiCounts[emoji.name]}`}
                 >
-                  <span 
-                    className="transition-all duration-150 group-hover:scale-110"
+                  {/* Emoji with enhanced glow */}
+                  <div 
+                    className="relative transition-all duration-300 group-hover:scale-125"
                     style={{ 
-                      fontSize: '24px',
+                      fontSize: '28px',
                       lineHeight: '1',
-                      filter: `drop-shadow(0 0 8px ${emoji.color}40)`
+                      filter: `drop-shadow(0 0 12px ${emoji.color}60) drop-shadow(0 0 24px ${emoji.color}30)`,
+                      textShadow: `0 0 20px ${emoji.color}80`
                     }}
                   >
                     {emoji.emoji}
-                  </span>
+                    
+                    {/* Pulsing ring effect on hover */}
+                    <div 
+                      className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500"
+                      style={{ 
+                        background: `radial-gradient(circle, ${emoji.color}20 0%, transparent 70%)`,
+                        animation: 'pulse 1.5s infinite',
+                        transform: 'scale(1.5)'
+                      }}
+                    />
+                  </div>
                   
+                  {/* Count with modern styling */}
                   <span 
-                    className="text-white text-sm font-medium transition-all duration-200"
+                    className="text-white font-bold transition-all duration-300 group-hover:text-yellow-300"
                     style={{ 
-                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
-                      fontSize: '14px',
-                      fontWeight: '500'
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)',
+                      background: 'linear-gradient(45deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7))',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
                     }}
                   >
                     {emojiCounts[emoji.name]}
                   </span>
                   
-                  {/* Hover glow effect */}
+                  {/* Enhanced hover glow effect */}
                   <div 
-                    className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-300"
+                    className="absolute inset-0 opacity-0 group-hover:opacity-40 transition-all duration-300 rounded-xl"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${emoji.color}30 0%, transparent 50%, ${emoji.color}20 100%)`,
+                      filter: 'blur(1px)'
+                    }}
+                  />
+                  
+                  {/* Ripple effect on click */}
+                  <div 
+                    className="absolute inset-0 rounded-xl opacity-0 group-active:opacity-100 transition-opacity duration-150"
                     style={{ 
                       background: `radial-gradient(circle, ${emoji.color}40 0%, transparent 70%)`,
-                      borderRadius: '6px'
+                      animation: 'ping 0.5s cubic-bezier(0, 0, 0.2, 1)'
                     }}
                   />
                 </button>
               ))}
               
-              {/* Total Reaction Count */}
-              <div className="flex items-center gap-2 ml-2 pl-3 border-l border-white/30">
-                <div className="w-2 h-2 bg-accent-green rounded-full animate-pulse" />
+              {/* Enhanced Total Reaction Count */}
+              <div className="flex flex-col items-center gap-1 ml-4 pl-4 border-l-2 border-gradient-to-b from-white/30 to-white/10">
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full animate-pulse"
+                    style={{ 
+                      background: 'linear-gradient(45deg, #4ade80, #22c55e)',
+                      boxShadow: '0 0 10px #22c55e50'
+                    }}
+                  />
+                  <span 
+                    className="font-bold"
+                    style={{ 
+                      fontSize: '16px',
+                      fontWeight: '700',
+                      background: 'linear-gradient(45deg, #ffffff, #e5e7eb)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
+                    }}
+                  >
+                    {globalReactionCount.toLocaleString()}
+                  </span>
+                </div>
                 <span 
-                  className="text-white font-medium"
+                  className="text-white/70"
                   style={{ 
-                    fontSize: '14px',
+                    fontSize: '10px',
                     fontWeight: '500',
-                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px'
                   }}
-                >
-                  {globalReactionCount.toLocaleString()}
-                </span>
-                <span 
-                  className="text-white/60 hidden sm:inline"
-                  style={{ fontSize: '12px' }}
                 >
                   reactions
                 </span>
               </div>
             </div>
+            
+            {/* Decorative elements */}
+            <div 
+              className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white/40 rounded-full"
+              style={{ boxShadow: '0 0 10px rgba(255,255,255,0.5)' }}
+            />
           </div>
-        )}
+        </div>
 
         {/* Video Player Controls Container */}
         <div className={`absolute bottom-0 left-0 right-0 z-30 transition-all duration-300 ${
@@ -362,7 +507,12 @@ const VideoPlayer = ({ currentMatch }) => {
                     step="0.1"
                     value={volume}
                     onChange={handleVolumeChange}
-                    className="w-16 lg:w-20 accent-accent-blue"
+                    className="w-16 lg:w-20"
+                    style={{
+                      accentColor: '#2196f3',
+                      background: 'rgba(255,255,255,0.2)',
+                      borderRadius: '4px'
+                    }}
                   />
                 </div>
 
