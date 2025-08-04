@@ -36,15 +36,7 @@ const Header = ({ viewerCount }) => {
           </div>
         </div>
         
-        {/* Center Navigation - Essential Only */}
-        <nav className="hidden md:flex items-center space-x-1">
-          <button className="px-6 py-2 text-sm font-semibold text-text-primary bg-white/10 rounded-lg hover:bg-white/20 transition-all duration-200">
-            Live
-          </button>
-          <button className="px-6 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-white/10 rounded-lg transition-all duration-200">
-            Schedule
-          </button>
-        </nav>
+
         
         {/* Right Section - Simplified */}
         <div className="flex items-center space-x-4">
