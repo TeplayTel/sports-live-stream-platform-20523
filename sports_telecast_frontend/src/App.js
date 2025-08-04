@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import SportsFilter from './components/SportsFilter';
 import VideoPlayer from './components/VideoPlayer';
+import MatchInfoSection from './components/MatchInfoSection';
 import AnalyticsPanel from './components/AnalyticsPanel';
 import MatchSummary from './components/MatchSummary';
 import SportsCards from './components/SportsCards';
@@ -115,6 +116,9 @@ function App() {
             <div className="lg:col-span-8 space-y-6">
               <div className="slide-in-left">
                 <VideoPlayer currentMatch={currentMatch} />
+              </div>
+              <div className="slide-in-left" style={{ animationDelay: '0.1s' }}>
+                <MatchInfoSection currentMatch={currentMatch} />
               </div>
               <div className="slide-in-left" style={{ animationDelay: '0.2s' }}>
                 <MatchSummary currentMatch={currentMatch} />

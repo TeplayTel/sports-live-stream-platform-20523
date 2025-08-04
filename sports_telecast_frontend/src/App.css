@@ -241,6 +241,36 @@ input:focus {
   .slide-in-right {
     animation: fade-in 0.4s ease-out forwards;
   }
+  
+  /* Match Info Section Mobile Styles */
+  .match-info-mobile {
+    padding: 8px 12px !important;
+  }
+  
+  .match-info-mobile .team-logo {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 16px !important;
+  }
+  
+  .match-info-mobile .team-name {
+    font-size: 12px !important;
+  }
+  
+  .match-info-mobile .score-text {
+    font-size: 24px !important;
+  }
+  
+  .match-info-mobile .score-section {
+    margin: 0 16px !important;
+  }
+}
+
+/* Tablet Responsive Adjustments */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .match-info-tablet {
+    padding: 10px 14px !important;
+  }
 }
 
 @keyframes fade-in {
