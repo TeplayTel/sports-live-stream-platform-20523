@@ -1,12 +1,14 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
+import ReactPlayer from 'react-player';
 
 // PUBLIC_INTERFACE
 const VideoPlayer = ({ currentMatch }) => {
   /**
-   * Enhanced video player component with premium emoji reactions, sound effects, and natural flying animations
+   * Enhanced video player component with ReactPlayer, premium emoji reactions, sound effects, and natural flying animations
    * Features sleek glassmorphism design, smooth animations, distinct sounds per emoji, and improved user experience
    */
-  const videoRef = useRef(null);
+  const playerRef = useRef(null);
+  const containerRef = useRef(null);
   const wsRef = useRef(null);
   const audioContextRef = useRef(null);
   const soundCacheRef = useRef({});
@@ -31,6 +33,7 @@ const VideoPlayer = ({ currentMatch }) => {
   });
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [videoError, setVideoError] = useState(null);
+  const [isBuffering, setIsBuffering] = useState(false);
   
   // Enhanced emoji configuration with sound frequencies and colors
   const emojis = [
@@ -78,8 +81,8 @@ const VideoPlayer = ({ currentMatch }) => {
     }
   ];
 
-  // Dummy video URL for testing
-  const dummyVideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+  // Video URL for ReactPlayer
+  const videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
   const qualityOptions = ['4K', 'HD', '720p', '480p', 'Auto'];
 
   // Initialize Web Audio API for sound effects
@@ -186,40 +189,51 @@ const VideoPlayer = ({ currentMatch }) => {
     };
   }, []);
 
-  // Video event handlers
+  // ReactPlayer event handlers
+  const handleReady = () => {
+    console.log('ReactPlayer ready');
+    setIsVideoLoading(false);
+    setVideoError(null);
+  };
+
+  const handleStart = () => {
+    console.log('ReactPlayer started');
+    setIsVideoLoading(false);
+  };
+
+  const handlePlay = () => {
+    setIsPlaying(true);
+  };
+
+  const handlePause = () => {
+    setIsPlaying(false);
+  };
+
+  const handleBuffer = () => {
+    setIsBuffering(true);
+  };
+
+  const handleBufferEnd = () => {
+    setIsBuffering(false);
+  };
+
+  const handleProgress = (state) => {
+    setCurrentTime(state.playedSeconds);
+  };
+
+  const handleDuration = (duration) => {
+    setDuration(duration);
+  };
+
+  const handleError = (error) => {
+    console.error('ReactPlayer error:', error);
+    setIsPlaying(false);
+    setVideoError('Failed to load video. Please try again.');
+    setIsVideoLoading(false);
+  };
+
+  // Enhanced controls auto-hide logic
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const updateTime = () => setCurrentTime(video.currentTime);
-    const updateDuration = () => setDuration(video.duration);
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
-    const handleError = (e) => {
-      console.error('Video error:', e);
-      setIsPlaying(false);
-      setVideoError('Failed to load video. Please try again.');
-      setIsVideoLoading(false);
-    };
-    const handleLoadStart = () => {
-      console.log('Video loading started');
-      setIsVideoLoading(true);
-      setVideoError(null);
-    };
-    const handleCanPlay = () => {
-      setIsVideoLoading(false);
-      setVideoError(null);
-    };
-
-    video.addEventListener('timeupdate', updateTime);
-    video.addEventListener('loadedmetadata', updateDuration);
-    video.addEventListener('play', handlePlay);
-    video.addEventListener('pause', handlePause);
-    video.addEventListener('error', handleError);
-    video.addEventListener('loadstart', handleLoadStart);
-    video.addEventListener('canplay', handleCanPlay);
-
-    // Enhanced controls auto-hide logic
     let controlsTimeout;
     const resetControlsTimeout = () => {
       clearTimeout(controlsTimeout);
@@ -232,7 +246,9 @@ const VideoPlayer = ({ currentMatch }) => {
     };
 
     const handleMouseMove = (e) => {
-      const rect = video.getBoundingClientRect();
+      const container = containerRef.current;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
       const isOverVideo = e.clientX >= rect.left && e.clientX <= rect.right && 
                          e.clientY >= rect.top && e.clientY <= rect.bottom - 120;
       if (isOverVideo) {
@@ -240,19 +256,21 @@ const VideoPlayer = ({ currentMatch }) => {
       }
     };
 
-    video.addEventListener('mousemove', handleMouseMove);
-    video.addEventListener('click', resetControlsTimeout);
+    const handleClick = () => {
+      resetControlsTimeout();
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('mousemove', handleMouseMove);
+      container.addEventListener('click', handleClick);
+    }
 
     return () => {
-      video.removeEventListener('timeupdate', updateTime);
-      video.removeEventListener('loadedmetadata', updateDuration);
-      video.removeEventListener('play', handlePlay);
-      video.removeEventListener('pause', handlePause);
-      video.removeEventListener('error', handleError);
-      video.removeEventListener('loadstart', handleLoadStart);
-      video.removeEventListener('canplay', handleCanPlay);
-      video.removeEventListener('mousemove', handleMouseMove);
-      video.removeEventListener('click', resetControlsTimeout);
+      if (container) {
+        container.removeEventListener('mousemove', handleMouseMove);
+        container.removeEventListener('click', handleClick);
+      }
       clearTimeout(controlsTimeout);
     };
   }, [isPlaying]);
@@ -318,33 +336,28 @@ const VideoPlayer = ({ currentMatch }) => {
     console.log(`🎵 ${emojiData.name} reaction with ${emojiData.sound.type} sound at ${emojiData.sound.frequency}Hz`);
   }, [initializeAudio, playEmojiSound]);
 
-  // Standard video controls
+  // ReactPlayer controls
   const togglePlayPause = () => {
-    const video = videoRef.current;
-    if (video.paused) {
-      video.play();
-    } else {
-      video.pause();
-    }
+    setIsPlaying(!isPlaying);
   };
 
   const handleSeek = (e) => {
-    const video = videoRef.current;
+    if (!playerRef.current) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
-    video.currentTime = percent * duration;
+    const seekTime = percent * duration;
+    playerRef.current.seekTo(seekTime, 'seconds');
   };
 
   const handleVolumeChange = (e) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
-    videoRef.current.volume = newVolume;
   };
 
   const toggleFullscreen = () => {
-    const container = videoRef.current.parentElement;
+    if (!containerRef.current) return;
     if (!document.fullscreenElement) {
-      container.requestFullscreen();
+      containerRef.current.requestFullscreen();
     } else {
       document.exitFullscreen();
     }
@@ -359,30 +372,54 @@ const VideoPlayer = ({ currentMatch }) => {
 
   return (
     <div className="relative bg-black rounded-xl overflow-hidden shadow-xl hover-lift group">
-      {/* Video Element */}
+      {/* ReactPlayer Container */}
       <div 
+        ref={containerRef}
         className="relative aspect-video group"
         onMouseEnter={() => setShowEmojiBar(true)}
         onMouseLeave={() => setShowEmojiBar(false)}
       >
-        <video
-          ref={videoRef}
-          className="w-full h-full object-cover"
-          poster="https://via.placeholder.com/800x450/1a1a1a/ffffff?text=Sports+Stream"
-          autoPlay
-          muted
-          loop
-        >
-          <source src={dummyVideoUrl} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
+        <ReactPlayer
+          ref={playerRef}
+          url={videoUrl}
+          width="100%"
+          height="100%"
+          playing={isPlaying}
+          volume={volume}
+          muted={false}
+          loop={true}
+          controls={false} // We'll use custom controls
+          onReady={handleReady}
+          onStart={handleStart}
+          onPlay={handlePlay}
+          onPause={handlePause}
+          onBuffer={handleBuffer}
+          onBufferEnd={handleBufferEnd}
+          onProgress={handleProgress}
+          onDuration={handleDuration}
+          onError={handleError}
+          config={{
+            file: {
+              attributes: {
+                poster: "https://via.placeholder.com/800x450/1a1a1a/ffffff?text=Sports+Stream"
+              }
+            }
+          }}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0
+          }}
+        />
         
         {/* Loading Overlay */}
-        {isVideoLoading && (
+        {(isVideoLoading || isBuffering) && (
           <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-20">
             <div className="text-center space-y-4">
               <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto"></div>
-              <p className="text-white text-lg font-medium">Loading stream...</p>
+              <p className="text-white text-lg font-medium">
+                {isBuffering ? 'Buffering...' : 'Loading stream...'}
+              </p>
             </div>
           </div>
         )}
@@ -404,7 +441,9 @@ const VideoPlayer = ({ currentMatch }) => {
                 onClick={() => {
                   setVideoError(null);
                   setIsVideoLoading(true);
-                  videoRef.current?.load();
+                  if (playerRef.current) {
+                    playerRef.current.seekTo(0);
+                  }
                 }}
                 className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
               >
