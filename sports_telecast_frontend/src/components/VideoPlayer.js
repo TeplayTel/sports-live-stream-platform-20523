@@ -120,11 +120,11 @@ const VideoPlayer = ({ currentMatch }) => {
     <div className="relative bg-black rounded-xl overflow-hidden shadow-xl hover-lift group">
       {/* Live Indicators */}
       <div className="absolute top-4 left-4 z-30 flex items-center space-x-3">
-        <div className="bg-accent-red text-white px-3 py-1 rounded-full text-xs font-bold pulse-glow flex items-center space-x-2">
-          <div className="w-2 h-2 bg-white rounded-full bounce-subtle"></div>
+        <div className="bg-accent-red text-white px-3 py-1 rounded-lg text-xs font-bold pulse-glow flex items-center space-x-2">
+          <div className="w-2 h-2 bg-white rounded-lg bounce-subtle"></div>
           <span>LIVE</span>
         </div>
-        <div className="glass-effect text-white px-3 py-1 rounded-full text-xs font-medium">
+        <div className="glass-effect text-white px-3 py-1 rounded-lg text-xs font-medium">
           {quality}
         </div>
       </div>
@@ -202,7 +202,7 @@ const VideoPlayer = ({ currentMatch }) => {
                 <button
                   key={index}
                   onClick={() => handleEmojiReaction(emoji, emoji.color)}
-                  className="glass-effect hover:bg-white/20 rounded-full p-3 text-xl transition-all duration-200 hover-scale transform hover:rotate-12"
+                  className="glass-effect hover:bg-white/20 rounded-lg p-3 text-xl transition-all duration-200 hover-scale transform hover:rotate-12"
                   style={{ 
                     animationDelay: `${index * 0.05}s`,
                     boxShadow: `0 0 20px ${emoji.color}40`
@@ -223,14 +223,14 @@ const VideoPlayer = ({ currentMatch }) => {
             {/* Progress Bar */}
             <div className="mb-4">
               <div 
-                className="h-1 bg-white/20 rounded-full cursor-pointer hover:h-2 transition-all duration-200"
+                className="h-1 bg-white/20 rounded-lg cursor-pointer hover:h-2 transition-all duration-200"
                 onClick={handleSeek}
               >
                 <div 
-                  className="h-full bg-gradient-primary rounded-full relative"
+                  className="h-full bg-gradient-primary rounded-lg relative"
                   style={{ width: `${(currentTime / duration) * 100 || 0}%` }}
                 >
-                  <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </div>
               </div>
             </div>
@@ -241,7 +241,7 @@ const VideoPlayer = ({ currentMatch }) => {
                 {/* Play/Pause */}
                 <button
                   onClick={togglePlayPause}
-                  className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-all duration-200 hover-scale"
+                  className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-all duration-200 hover-scale"
                 >
                   {isPlaying ? (
                     <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -305,7 +305,7 @@ const VideoPlayer = ({ currentMatch }) => {
               <span>{currentMatch.competition}</span>
               <span>•</span>
               <span className="flex items-center space-x-1">
-                <div className="w-2 h-2 bg-accent-green rounded-full bounce-subtle"></div>
+                <div className="w-2 h-2 bg-accent-green rounded-lg bounce-subtle"></div>
                 <span>Live</span>
               </span>
             </p>

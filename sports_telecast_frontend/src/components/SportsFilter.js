@@ -26,7 +26,7 @@ const SportsFilter = ({ selectedSport, onSportChange }) => {
         <div className="md:hidden mb-4">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="w-full flex items-center justify-between p-4 bg-tertiary-bg rounded-2xl hover:bg-hover-bg transition-all duration-200"
+            className="w-full flex items-center justify-between p-4 bg-tertiary-bg rounded-lg hover:bg-hover-bg transition-all duration-200"
           >
             <span className="font-semibold text-text-primary">
               {selectedSport}
@@ -53,7 +53,7 @@ const SportsFilter = ({ selectedSport, onSportChange }) => {
               <button
                 key={sport.name}
                 onClick={() => handleSportClick(sport.name)}
-                className={`group flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold transition-all duration-300 hover-lift whitespace-nowrap scale-in min-w-fit ${
+                className={`group flex items-center justify-center px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 hover-lift whitespace-nowrap scale-in min-w-fit ${
                   selectedSport === sport.name
                     ? 'bg-white text-primary-bg shadow-lg transform scale-105'
                     : 'bg-tertiary-bg text-text-secondary hover:bg-hover-bg hover:text-text-primary'
@@ -63,7 +63,7 @@ const SportsFilter = ({ selectedSport, onSportChange }) => {
                 }}
               >
                 <span className="font-medium">{sport.name}</span>
-                <span className={`ml-2 px-2 py-1 rounded-full text-xs font-bold transition-all duration-200 ${
+                <span className={`ml-2 px-2 py-1 rounded-lg text-xs font-bold transition-all duration-200 ${
                   selectedSport === sport.name
                     ? 'bg-primary-bg/20 text-primary-bg'
                     : 'bg-black/20 text-text-muted group-hover:bg-accent-blue/20 group-hover:text-accent-blue'

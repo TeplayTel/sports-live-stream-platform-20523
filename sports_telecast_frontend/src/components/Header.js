@@ -38,10 +38,10 @@ const Header = ({ viewerCount }) => {
         
         {/* Center Navigation - Essential Only */}
         <nav className="hidden md:flex items-center space-x-1">
-          <button className="px-6 py-2 text-sm font-semibold text-text-primary bg-white/10 rounded-full hover:bg-white/20 transition-all duration-200">
+          <button className="px-6 py-2 text-sm font-semibold text-text-primary bg-white/10 rounded-lg hover:bg-white/20 transition-all duration-200">
             Live
           </button>
-          <button className="px-6 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-white/10 rounded-full transition-all duration-200">
+          <button className="px-6 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-white/10 rounded-lg transition-all duration-200">
             Schedule
           </button>
         </nav>
@@ -49,7 +49,7 @@ const Header = ({ viewerCount }) => {
         {/* Right Section - Simplified */}
         <div className="flex items-center space-x-4">
           {/* Viewer Count */}
-          <div className="hidden sm:flex items-center space-x-2 bg-secondary-bg rounded-full px-4 py-2 hover-glow-blue transition-all duration-300">
+          <div className="hidden sm:flex items-center space-x-2 bg-secondary-bg rounded-lg px-4 py-2 hover-glow-blue transition-all duration-300">
             <div className="w-2 h-2 bg-accent-green rounded-full bounce-subtle"></div>
             <span className="text-sm text-text-secondary font-medium">
               <span className="text-accent-green font-bold">
@@ -60,7 +60,7 @@ const Header = ({ viewerCount }) => {
           </div>
 
           {/* Search */}
-          <button className="p-2 bg-secondary-bg hover:bg-hover-bg rounded-full transition-all duration-200 hover-scale group">
+          <button className="p-2 bg-secondary-bg hover:bg-hover-bg rounded-lg transition-all duration-200 hover-scale group">
             <svg className="w-5 h-5 text-text-secondary group-hover:text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -68,10 +68,10 @@ const Header = ({ viewerCount }) => {
           
           {/* User Profile */}
           <div className="relative group">
-            <button className="w-10 h-10 bg-gradient-accent rounded-full flex items-center justify-center text-sm font-bold text-white hover-scale transition-all duration-200 hover-glow">
+            <button className="w-10 h-10 bg-gradient-accent rounded-lg flex items-center justify-center text-sm font-bold text-white hover-scale transition-all duration-200 hover-glow">
               U
             </button>
-            <div className="absolute inset-0 bg-gradient-accent rounded-full blur opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-gradient-accent rounded-lg blur opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
           </div>
         </div>
       </div>

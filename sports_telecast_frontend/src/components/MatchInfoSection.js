@@ -53,7 +53,7 @@ const MatchInfoSection = ({ currentMatch }) => {
         {/* Home Team Section */}
         <div className="flex flex-col items-center space-y-2 flex-1">
           <div 
-            className="team-logo w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg transition-transform duration-200 hover:scale-105"
+            className="team-logo w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-lg transition-transform duration-200 hover:scale-105"
             style={{ 
               backgroundColor: homeTeamLogo.backgroundColor,
               width: '40px',
@@ -158,7 +158,7 @@ const MatchInfoSection = ({ currentMatch }) => {
       {status === 'LIVE' && (
         <div className="flex items-center justify-center mt-2">
           <div className="flex items-center space-x-2 text-xs">
-            <div className="w-2 h-2 bg-accent-red rounded-full bounce-subtle"></div>
+            <div className="w-2 h-2 bg-accent-red rounded-lg bounce-subtle"></div>
             <span className="text-text-secondary font-medium">
               {time} • {status}
             </span>

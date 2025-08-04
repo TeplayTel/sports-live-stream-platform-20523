@@ -188,14 +188,14 @@ const SportsCards = ({ selectedSport, onSportChange }) => {
       >
         {/* Featured Badge */}
         {match.featured && (
-          <div className="absolute top-3 left-3 z-20 bg-gradient-primary text-white px-2 py-1 rounded-full text-xs font-bold">
+          <div className="absolute top-3 left-3 z-20 bg-gradient-primary text-white px-2 py-1 rounded-lg text-xs font-bold">
             ⭐ Featured
           </div>
         )}
 
         {/* Trending Badge */}
         {match.trending && (
-          <div className="absolute top-3 right-3 z-20 bg-gradient-accent text-white px-2 py-1 rounded-full text-xs font-bold flex items-center space-x-1">
+          <div className="absolute top-3 right-3 z-20 bg-gradient-accent text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center space-x-1">
             <span>🔥</span>
             <span>Trending</span>
           </div>
@@ -214,7 +214,7 @@ const SportsCards = ({ selectedSport, onSportChange }) => {
           <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
             isHovered ? 'opacity-100' : 'opacity-0'
           }`}>
-            <div className="bg-white/20 backdrop-blur-sm rounded-full p-4 hover-scale">
+            <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 hover-scale">
               <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z"/>
               </svg>
@@ -228,11 +228,11 @@ const SportsCards = ({ selectedSport, onSportChange }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span className="text-lg">{getSportIcon(match.sport)}</span>
-              <span className="text-xs text-text-muted bg-tertiary-bg px-2 py-1 rounded-full">
+              <span className="text-xs text-text-muted bg-tertiary-bg px-2 py-1 rounded-lg">
                 {match.competition}
               </span>
             </div>
-            <div className={`px-3 py-1 rounded-full text-xs font-bold ${statusConfig.bg} ${statusConfig.text} ${statusConfig.glow} ${
+            <div className={`px-3 py-1 rounded-lg text-xs font-bold ${statusConfig.bg} ${statusConfig.text} ${statusConfig.glow} ${
               statusConfig.pulse ? 'pulse-glow' : ''
             }`}>
               {match.status}
@@ -244,10 +244,10 @@ const SportsCards = ({ selectedSport, onSportChange }) => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3 flex-1">
                 <div className="relative">
-                  <div className="w-10 h-10 bg-accent-red rounded-full flex items-center justify-center text-sm font-bold text-white shadow-lg">
+                  <div className="w-10 h-10 bg-accent-red rounded-lg flex items-center justify-center text-sm font-bold text-white shadow-lg">
                     {match.homeTeam[0]}
                   </div>
-                  <div className="absolute inset-0 bg-accent-red rounded-full blur opacity-30"></div>
+                  <div className="absolute inset-0 bg-accent-red rounded-lg blur opacity-30"></div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-text-primary truncate">{match.homeTeam}</p>
@@ -273,10 +273,10 @@ const SportsCards = ({ selectedSport, onSportChange }) => {
                   <p className="text-sm font-medium text-text-primary truncate">{match.awayTeam}</p>
                 </div>
                 <div className="relative">
-                  <div className="w-10 h-10 bg-accent-blue rounded-full flex items-center justify-center text-sm font-bold text-white shadow-lg">
+                  <div className="w-10 h-10 bg-accent-blue rounded-lg flex items-center justify-center text-sm font-bold text-white shadow-lg">
                     {match.awayTeam[0]}
                   </div>
-                  <div className="absolute inset-0 bg-accent-blue rounded-full blur opacity-30"></div>
+                  <div className="absolute inset-0 bg-accent-blue rounded-lg blur opacity-30"></div>
                 </div>
               </div>
             </div>

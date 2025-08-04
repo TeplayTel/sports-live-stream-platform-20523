@@ -157,10 +157,10 @@ const MatchSummary = ({ currentMatch }) => {
                   >
                     {/* Timeline Dot */}
                     <div className="relative z-10">
-                      <div className={`w-4 h-4 rounded-full bg-gradient-to-r ${getEventColor(event.type, event.impact)} flex items-center justify-center shadow-lg`}>
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      <div className={`w-4 h-4 rounded-lg bg-gradient-to-r ${getEventColor(event.type, event.impact)} flex items-center justify-center shadow-lg`}>
+                        <div className="w-2 h-2 bg-white rounded-lg"></div>
                       </div>
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-white/30 to-transparent animate-ping"></div>
+                      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/30 to-transparent animate-ping"></div>
                     </div>
 
                     {/* Event Card */}
@@ -172,7 +172,7 @@ const MatchSummary = ({ currentMatch }) => {
                             <span className="text-sm font-mono text-text-secondary bg-secondary-bg px-2 py-1 rounded">
                               {event.time}
                             </span>
-                            <div className={`w-3 h-3 rounded-full ${
+                            <div className={`w-3 h-3 rounded-lg ${
                               event.team === 'home' ? 'bg-accent-red' : 'bg-accent-blue'
                             }`}></div>
                           </div>
@@ -215,7 +215,7 @@ const MatchSummary = ({ currentMatch }) => {
               {/* Home Team */}
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-accent-red rounded-full flex items-center justify-center text-sm font-bold text-white">
+                  <div className="w-8 h-8 bg-accent-red rounded-lg flex items-center justify-center text-sm font-bold text-white">
                     A
                   </div>
                   <div>
@@ -250,7 +250,7 @@ const MatchSummary = ({ currentMatch }) => {
               {/* Away Team */}
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-accent-blue rounded-full flex items-center justify-center text-sm font-bold text-white">
+                  <div className="w-8 h-8 bg-accent-blue rounded-lg flex items-center justify-center text-sm font-bold text-white">
                     C
                   </div>
                   <div>
@@ -294,7 +294,7 @@ const MatchSummary = ({ currentMatch }) => {
               {/* Field markings */}
               <div className="absolute inset-4 border-2 border-white/30 rounded-lg">
                 <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/30 transform -translate-y-0.5"></div>
-                <div className="absolute top-1/2 left-1/2 w-20 h-20 border-2 border-white/30 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
+                <div className="absolute top-1/2 left-1/2 w-20 h-20 border-2 border-white/30 rounded-lg transform -translate-x-1/2 -translate-y-1/2"></div>
               </div>
               
               {/* Player Heat Dots */}
@@ -303,7 +303,7 @@ const MatchSummary = ({ currentMatch }) => {
                 {[...Array(15)].map((_, i) => (
                   <div
                     key={`home-${i}`}
-                    className="absolute w-4 h-4 bg-red-500/60 rounded-full animate-pulse"
+                    className="absolute w-4 h-4 bg-red-500/60 rounded-lg animate-pulse"
                     style={{
                       left: `${Math.random() * 45 + 5}%`,
                       top: `${Math.random() * 80 + 10}%`,
@@ -316,7 +316,7 @@ const MatchSummary = ({ currentMatch }) => {
                 {[...Array(12)].map((_, i) => (
                   <div
                     key={`away-${i}`}
-                    className="absolute w-4 h-4 bg-blue-500/60 rounded-full animate-pulse"
+                    className="absolute w-4 h-4 bg-blue-500/60 rounded-lg animate-pulse"
                     style={{
                       left: `${Math.random() * 45 + 50}%`,
                       top: `${Math.random() * 80 + 10}%`,
@@ -328,11 +328,11 @@ const MatchSummary = ({ currentMatch }) => {
               
               <div className="flex items-center justify-center space-x-8 mt-4">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-red-500 rounded-lg"></div>
                   <span className="text-white text-sm">Arsenal Activity</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-blue-500 rounded-lg"></div>
                   <span className="text-white text-sm">Chelsea Activity</span>
                 </div>
               </div>
