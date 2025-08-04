@@ -163,13 +163,15 @@ const VideoPlayer = ({ currentMatch }) => {
   return (
     <div className="relative bg-black rounded-xl overflow-hidden shadow-xl hover-lift group">
       {/* Video Element */}
-      <div className="relative aspect-video group">
+      <div 
+        className="relative aspect-video group"
+        onMouseEnter={() => setShowEmojiBar(true)}
+        onMouseLeave={() => setShowEmojiBar(false)}
+      >
         <video
           ref={videoRef}
           className="w-full h-full object-cover"
           poster="https://via.placeholder.com/800x450/1a1a1a/ffffff?text=Sports+Stream"
-          onMouseEnter={() => setShowEmojiBar(true)}
-          onMouseLeave={() => setShowEmojiBar(false)}
           autoPlay
           muted
           loop
@@ -198,65 +200,67 @@ const VideoPlayer = ({ currentMatch }) => {
           </div>
         ))}
 
+        {/* Centered Emoji Reaction Bar Overlay */}
+        {showEmojiBar && (
+          <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
+            <div 
+              className="bg-black/80 backdrop-blur-md px-4 py-3 flex items-center space-x-3 border border-white/20 slide-in-down pointer-events-auto"
+              style={{ 
+                borderRadius: '8px',
+                width: 'fit-content',
+                maxWidth: '90%'
+              }}
+              onMouseEnter={() => setShowEmojiBar(true)}
+              onMouseLeave={() => setShowEmojiBar(false)}
+            >
+              {emojis.map((emoji, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleEmojiReaction(emoji)}
+                  className="group relative p-2 rounded transition-all duration-300 hover:bg-white/20 hover:scale-110 active:scale-95"
+                  style={{ 
+                    animationDelay: `${index * 0.1}s`,
+                    borderRadius: '6px'
+                  }}
+                  title={`React with ${emoji.name}`}
+                >
+                  <span 
+                    className="text-lg sm:text-xl transition-all duration-300 group-hover:drop-shadow-lg"
+                    style={{ 
+                      filter: `drop-shadow(0 0 8px ${emoji.color}40)`,
+                    }}
+                  >
+                    {emoji.emoji}
+                  </span>
+                  
+                  {/* Hover glow effect */}
+                  <div 
+                    className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-300"
+                    style={{ 
+                      background: `radial-gradient(circle, ${emoji.color}40 0%, transparent 70%)`,
+                      borderRadius: '6px'
+                    }}
+                  />
+                </button>
+              ))}
+              
+              {/* Global Reaction Count */}
+              <div className="flex items-center space-x-2 ml-3 pl-3 border-l border-white/30">
+                <div className="w-2 h-2 bg-accent-green rounded-full animate-pulse" />
+                <span className="text-white text-sm font-medium">
+                  {globalReactionCount.toLocaleString()}
+                </span>
+                <span className="text-white/60 text-xs hidden sm:inline">reactions</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Video Player Controls Container */}
         <div className={`absolute bottom-0 left-0 right-0 z-25 transition-all duration-300 ${
-          showControls || showEmojiBar ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+          showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
         }`}>
           <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4">
-            
-            {/* Emoji Reaction Bar - Positioned above seekbar */}
-            {showEmojiBar && (
-              <div className="mb-4 flex justify-center">
-                <div 
-                  className="bg-black/80 backdrop-blur-md px-4 py-3 flex items-center space-x-3 border border-white/20 slide-in-down"
-                  style={{ 
-                    borderRadius: '8px',
-                    width: 'fit-content',
-                    maxWidth: '90%'
-                  }}
-                >
-                  {emojis.map((emoji, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleEmojiReaction(emoji)}
-                      className="group relative p-2 rounded transition-all duration-300 hover:bg-white/20 hover:scale-110 active:scale-95"
-                      style={{ 
-                        animationDelay: `${index * 0.1}s`,
-                        borderRadius: '6px'
-                      }}
-                      title={`React with ${emoji.name}`}
-                    >
-                      <span 
-                        className="text-lg sm:text-xl transition-all duration-300 group-hover:drop-shadow-lg"
-                        style={{ 
-                          filter: `drop-shadow(0 0 8px ${emoji.color}40)`,
-                        }}
-                      >
-                        {emoji.emoji}
-                      </span>
-                      
-                      {/* Hover glow effect */}
-                      <div 
-                        className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-300"
-                        style={{ 
-                          background: `radial-gradient(circle, ${emoji.color}40 0%, transparent 70%)`,
-                          borderRadius: '6px'
-                        }}
-                      />
-                    </button>
-                  ))}
-                  
-                  {/* Global Reaction Count */}
-                  <div className="flex items-center space-x-2 ml-3 pl-3 border-l border-white/30">
-                    <div className="w-2 h-2 bg-accent-green rounded-full animate-pulse" />
-                    <span className="text-white text-sm font-medium">
-                      {globalReactionCount.toLocaleString()}
-                    </span>
-                    <span className="text-white/60 text-xs hidden sm:inline">reactions</span>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Progress Bar / Seekbar */}
             <div className="mb-4">
