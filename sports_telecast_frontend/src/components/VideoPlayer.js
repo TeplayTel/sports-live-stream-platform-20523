@@ -18,6 +18,14 @@ const VideoPlayer = ({ currentMatch }) => {
   const [quality, setQuality] = useState('HD');
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [globalReactionCount, setGlobalReactionCount] = useState(2847);
+  const [emojiCounts, setEmojiCounts] = useState({
+    love: 342,
+    laugh: 128,
+    wow: 89,
+    clap: 205,
+    fire: 167,
+    soccer: 95
+  });
   
   const emojis = [
     { emoji: '❤️', color: '#ff1744', name: 'love' },
@@ -110,6 +118,12 @@ const VideoPlayer = ({ currentMatch }) => {
     
     setFlyingReactions(prev => [...prev, newFlyingReaction]);
     
+    // Update individual emoji count
+    setEmojiCounts(prev => ({
+      ...prev,
+      [emojiData.name]: prev[emojiData.name] + 1
+    }));
+    
     // Update global count (simulate websocket)
     setGlobalReactionCount(prev => prev + 1);
     
@@ -200,15 +214,17 @@ const VideoPlayer = ({ currentMatch }) => {
           </div>
         ))}
 
-        {/* Centered Emoji Reaction Bar Overlay */}
+        {/* Bottom Emoji Reaction Bar Overlay - Above Seekbar */}
         {showEmojiBar && (
-          <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
+          <div 
+            className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-35 pointer-events-none slide-in-down"
+            style={{ bottom: '80px' }} // Position above controls
+          >
             <div 
-              className="bg-black/80 backdrop-blur-md px-4 py-3 flex items-center space-x-3 border border-white/20 slide-in-down pointer-events-auto"
+              className="bg-black/70 backdrop-blur-sm px-4 py-2 flex items-center gap-3 pointer-events-auto"
               style={{ 
-                borderRadius: '8px',
-                width: 'fit-content',
-                maxWidth: '90%'
+                borderRadius: '12px',
+                width: 'fit-content'
               }}
               onMouseEnter={() => setShowEmojiBar(true)}
               onMouseLeave={() => setShowEmojiBar(false)}
@@ -217,20 +233,36 @@ const VideoPlayer = ({ currentMatch }) => {
                 <button
                   key={index}
                   onClick={() => handleEmojiReaction(emoji)}
-                  className="group relative p-2 rounded transition-all duration-300 hover:bg-white/20 hover:scale-110 active:scale-95"
+                  className="group relative flex items-center gap-1 px-2 py-1 rounded-md transition-all duration-200 hover:bg-white/10 active:scale-95"
                   style={{ 
                     animationDelay: `${index * 0.1}s`,
-                    borderRadius: '6px'
+                    borderRadius: '6px',
+                    minHeight: '32px',
+                    minWidth: '32px'
                   }}
                   title={`React with ${emoji.name}`}
+                  aria-label={`React with ${emoji.name}, current count: ${emojiCounts[emoji.name]}`}
                 >
                   <span 
-                    className="text-lg sm:text-xl transition-all duration-300 group-hover:drop-shadow-lg"
+                    className="transition-all duration-150 group-hover:scale-110"
                     style={{ 
-                      filter: `drop-shadow(0 0 8px ${emoji.color}40)`,
+                      fontSize: '24px',
+                      lineHeight: '1',
+                      filter: `drop-shadow(0 0 8px ${emoji.color}40)`
                     }}
                   >
                     {emoji.emoji}
+                  </span>
+                  
+                  <span 
+                    className="text-white text-sm font-medium transition-all duration-200"
+                    style={{ 
+                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
+                      fontSize: '14px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    {emojiCounts[emoji.name]}
                   </span>
                   
                   {/* Hover glow effect */}
@@ -244,20 +276,32 @@ const VideoPlayer = ({ currentMatch }) => {
                 </button>
               ))}
               
-              {/* Global Reaction Count */}
-              <div className="flex items-center space-x-2 ml-3 pl-3 border-l border-white/30">
+              {/* Total Reaction Count */}
+              <div className="flex items-center gap-2 ml-2 pl-3 border-l border-white/30">
                 <div className="w-2 h-2 bg-accent-green rounded-full animate-pulse" />
-                <span className="text-white text-sm font-medium">
+                <span 
+                  className="text-white font-medium"
+                  style={{ 
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
+                  }}
+                >
                   {globalReactionCount.toLocaleString()}
                 </span>
-                <span className="text-white/60 text-xs hidden sm:inline">reactions</span>
+                <span 
+                  className="text-white/60 hidden sm:inline"
+                  style={{ fontSize: '12px' }}
+                >
+                  reactions
+                </span>
               </div>
             </div>
           </div>
         )}
 
         {/* Video Player Controls Container */}
-        <div className={`absolute bottom-0 left-0 right-0 z-25 transition-all duration-300 ${
+        <div className={`absolute bottom-0 left-0 right-0 z-30 transition-all duration-300 ${
           showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
         }`}>
           <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4">
