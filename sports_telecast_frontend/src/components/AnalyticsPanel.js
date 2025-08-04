@@ -174,11 +174,11 @@ const AnalyticsPanel = () => {
           {/* Team Legend */}
           <div className="flex items-center justify-center space-x-6 mt-6 pt-4 border-t border-border-color">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-gradient-to-r from-red-500 to-red-600 rounded-full"></div>
+              <div className="w-3 h-3 bg-gradient-to-r from-red-500 to-red-600 rounded-lg"></div>
               <span className="text-sm text-text-secondary">Arsenal</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"></div>
+              <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg"></div>
               <span className="text-sm text-text-secondary">Chelsea</span>
             </div>
           </div>
@@ -201,7 +201,7 @@ const AnalyticsPanel = () => {
           <div className="h-80 overflow-y-auto p-4 space-y-4">
             {chatMessages.map((msg, index) => (
               <div key={msg.id} className="flex items-start space-x-3 slide-in-right" style={{ animationDelay: `${index * 0.05}s` }}>
-                <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center text-sm">
+                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center text-sm">
                   {msg.avatar}
                 </div>
                 <div className="flex-1">
@@ -263,7 +263,7 @@ const AnalyticsPanel = () => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="bg-gradient-primary text-white px-2 py-1 rounded-full text-xs font-bold">
+                    <div className="bg-gradient-primary text-white px-2 py-1 rounded-lg text-xs font-bold">
                       {match.competition}
                     </div>
                     <svg className="w-4 h-4 text-text-muted group-hover:text-accent-blue transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
