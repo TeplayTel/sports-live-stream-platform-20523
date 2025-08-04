@@ -109,8 +109,10 @@ function App() {
           onSportChange={handleSportChange}
         />
         
-        {/* Fixed Match Info Section */}
-        <MatchInfoSection currentMatch={currentMatch} />
+        {/* Match Info Section */}
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 pt-0">
+          <MatchInfoSection currentMatch={currentMatch} />
+        </div>
         
         {/* Main Layout Grid */}
         <div className="max-w-7xl mx-auto p-4 sm:p-6">
