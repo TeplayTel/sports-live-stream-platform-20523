@@ -13,7 +13,7 @@ function App() {
   const [selectedSport, setSelectedSport] = useState('All');
   const [viewerCount, setViewerCount] = useState(12847);
   const [isLoading, setIsLoading] = useState(true);
-  const [theme, setTheme] = useState('dark');
+  const [theme] = useState('dark');
   
   const [currentMatch] = useState({
     homeTeam: 'Arsenal',
