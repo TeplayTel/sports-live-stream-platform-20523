@@ -489,71 +489,47 @@ const VideoPlayer = ({ currentMatch }) => {
         >
           {/* Premium Glassmorphism Container */}
           <div className="relative">
-            {/* Main Container */}
+            {/* Main Container - Minimal Sleek Design */}
             <div 
-              className="relative bg-gradient-to-r from-black/60 via-gray-900/80 to-black/60 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden"
+              className="relative flex items-center gap-6"
               style={{ 
-                borderRadius: '28px',
-                padding: '16px 24px',
-                background: 'linear-gradient(135deg, rgba(0,0,0,0.75) 0%, rgba(20,20,20,0.85) 30%, rgba(40,40,40,0.90) 70%, rgba(0,0,0,0.75) 100%)',
-                boxShadow: `
-                  0 20px 40px rgba(0,0,0,0.5),
-                  0 8px 16px rgba(0,0,0,0.3),
-                  inset 0 1px 0 rgba(255,255,255,0.1),
-                  inset 0 -1px 0 rgba(0,0,0,0.2)
-                `,
-                backdropFilter: 'blur(24px) saturate(180%)'
+                padding: '12px 20px',
               }}
             >
-              {/* Subtle animated background */}
-              <div 
-                className="absolute inset-0 opacity-20"
-                style={{
-                  background: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.03) 50%, transparent 70%)',
-                  animation: 'shimmer 3s ease-in-out infinite'
-                }}
-              />
-              
-              <div className="relative flex items-center gap-3">
                 {emojis.map((emoji, index) => (
                   <button
                     key={index}
                     onClick={() => handleEmojiReaction(emoji)}
-                    className="group relative flex flex-col items-center gap-2 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/10 active:scale-95"
+                    className="group relative transition-all duration-300 hover:scale-110 active:scale-95 p-2"
                     style={{ 
                       animationDelay: `${index * 0.08}s`,
-                      minHeight: '72px',
-                      minWidth: '56px',
-                      background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      backdropFilter: 'blur(8px)'
                     }}
                     title={`React with ${emoji.name}`}
-                    aria-label={`React with ${emoji.name}, current count: ${emojiCounts[emoji.name]}`}
+                    aria-label={`React with ${emoji.name}`}
                   >
                     {/* Enhanced Emoji with Dynamic Glow */}
                     <div 
-                      className="relative transition-all duration-400 group-hover:scale-125 group-active:scale-110"
+                      className="relative transition-all duration-400"
                       style={{ 
-                        fontSize: '32px',
+                        fontSize: '36px',
                         lineHeight: '1',
                         filter: `
-                          drop-shadow(0 0 8px ${emoji.color}40) 
-                          drop-shadow(0 0 16px ${emoji.color}20)
-                          brightness(1.1)
+                          drop-shadow(0 0 12px ${emoji.color}60) 
+                          drop-shadow(0 0 24px ${emoji.color}30)
+                          brightness(1.2)
                         `,
-                        textShadow: `0 0 20px ${emoji.color}60`
+                        textShadow: `0 0 30px ${emoji.color}80`
                       }}
                     >
                       {emoji.emoji}
                       
                       {/* Dynamic Pulse Ring on Hover */}
                       <div 
-                        className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-60 transition-all duration-500"
+                        className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-40 transition-all duration-500"
                         style={{ 
-                          background: `radial-gradient(circle, ${emoji.color}25 0%, ${emoji.color}10 40%, transparent 70%)`,
+                          background: `radial-gradient(circle, ${emoji.color}30 0%, ${emoji.color}15 40%, transparent 70%)`,
                           animation: 'pulse 2s infinite',
-                          transform: 'scale(2)'
+                          transform: 'scale(2.5)'
                         }}
                       />
                       
@@ -561,90 +537,16 @@ const VideoPlayer = ({ currentMatch }) => {
                       <div 
                         className="absolute inset-0 rounded-full opacity-0 group-active:opacity-80 transition-opacity duration-200"
                         style={{ 
-                          background: `radial-gradient(circle, ${emoji.color}30 0%, transparent 60%)`,
+                          background: `radial-gradient(circle, ${emoji.color}40 0%, transparent 60%)`,
                           animation: 'ripple 0.6s ease-out',
-                          transform: 'scale(1.5)'
+                          transform: 'scale(2)'
                         }}
                       />
                     </div>
-                    
-                    {/* Elegant Count Display */}
-                    <span 
-                      className="text-white font-semibold transition-all duration-300 group-hover:text-yellow-200 group-hover:scale-110"
-                      style={{ 
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        textShadow: '0 2px 4px rgba(0,0,0,0.6)',
-                        background: `linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%)`,
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text'
-                      }}
-                    >
-                      {emojiCounts[emoji.name]}
-                    </span>
-                    
-                    {/* Hover Glow Enhancement */}
-                    <div 
-                      className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-all duration-400 rounded-2xl"
-                      style={{ 
-                        background: `linear-gradient(135deg, ${emoji.color}20 0%, transparent 50%, ${emoji.color}15 100%)`,
-                        filter: 'blur(2px)'
-                      }}
-                    />
                   </button>
                 ))}
-                
-                {/* Premium Global Counter */}
-                <div className="flex flex-col items-center gap-2 ml-6 pl-6" style={{
-                  borderLeft: '2px solid rgba(255,255,255,0.15)',
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)'
-                }}>
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="w-4 h-4 rounded-full animate-pulse"
-                      style={{ 
-                        background: 'linear-gradient(45deg, #10b981, #059669)',
-                        boxShadow: '0 0 12px #10b98150, 0 0 24px #10b98130'
-                      }}
-                    />
-                    <span 
-                      className="font-bold tracking-wide"
-                      style={{ 
-                        fontSize: '18px',
-                        fontWeight: '700',
-                        background: 'linear-gradient(135deg, #ffffff 0%, #e5e7eb 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                        textShadow: '0 2px 8px rgba(0,0,0,0.4)'
-                      }}
-                    >
-                      {globalReactionCount.toLocaleString()}
-                    </span>
-                  </div>
-                  <span 
-                    className="text-white/60 tracking-widest"
-                    style={{ 
-                      fontSize: '11px',
-                      fontWeight: '500',
-                      textTransform: 'uppercase',
-                      letterSpacing: '1px'
-                    }}
-                  >
-                    reactions
-                  </span>
-                </div>
-              </div>
+=======
             </div>
-            
-            {/* Decorative Top Indicator */}
-            <div 
-              className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-gradient-to-br from-white/40 to-white/20 rounded-full"
-              style={{ 
-                boxShadow: '0 0 15px rgba(255,255,255,0.3), inset 0 1px 0 rgba(255,255,255,0.4)' 
-              }}
-            />
           </div>
         </div>
 
