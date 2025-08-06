@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 // PUBLIC_INTERFACE
-const Header = ({ viewerCount }) => {
+const Header = ({ viewerCount, apiConnected, apiError }) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -40,6 +40,14 @@ const Header = ({ viewerCount }) => {
         
         {/* Right Section - Simplified */}
         <div className="flex items-center space-x-4">
+          {/* API Status Indicator */}
+          <div className="hidden md:flex items-center space-x-2 bg-secondary-bg rounded-lg px-3 py-2">
+            <div className={`w-2 h-2 rounded-full ${apiConnected ? 'bg-accent-green' : 'bg-red-500'} ${apiConnected ? 'bounce-subtle' : 'animate-pulse'}`}></div>
+            <span className="text-xs text-text-muted">
+              {apiConnected ? 'Live' : 'Offline'}
+            </span>
+          </div>
+
           {/* Viewer Count */}
           <div className="hidden sm:flex items-center space-x-2 bg-secondary-bg rounded-lg px-4 py-2 hover-glow-blue transition-all duration-300">
             <div className="w-2 h-2 bg-accent-green rounded-full bounce-subtle"></div>

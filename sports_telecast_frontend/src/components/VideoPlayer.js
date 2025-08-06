@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import ReactPlayer from 'react-player';
+import ApiService from '../services/api';
 
 // PUBLIC_INTERFACE
-const VideoPlayer = ({ currentMatch }) => {
+const VideoPlayer = ({ currentMatch, apiConnected }) => {
   /**
    * Enhanced video player component with ReactPlayer, premium emoji reactions, sound effects, and natural flying animations
    * Features sleek glassmorphism design, smooth animations, distinct sounds per emoji, and improved user experience
@@ -34,9 +35,11 @@ const VideoPlayer = ({ currentMatch }) => {
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [videoError, setVideoError] = useState(null);
   const [isBuffering, setIsBuffering] = useState(false);
+  const [availableEmojis, setAvailableEmojis] = useState([]);
+  const [wsConnection, setWsConnection] = useState(null);
   
-  // Enhanced emoji configuration with sound frequencies and colors
-  const emojis = [
+  // Enhanced emoji configuration with sound frequencies and colors (fallback)
+  const defaultEmojis = [
     { 
       emoji: '❤️', 
       color: '#ff1744', 
@@ -168,26 +171,109 @@ const VideoPlayer = ({ currentMatch }) => {
     }
   }, [createEmojiSound]);
 
-  // Mock WebSocket for real-time reaction updates
+  // Load emoji data from API and setup WebSocket
   useEffect(() => {
-    const connectWebSocket = () => {
-      console.log('Connecting to mock WebSocket for reactions...');
-      
+    const loadEmojis = async () => {
+      if (!apiConnected || !currentMatch?.id) {
+        setAvailableEmojis(defaultEmojis);
+        return;
+      }
+
+      try {
+        // Load available emojis from API
+        const emojiResponse = await ApiService.getEmojis(1, 10);
+        if (emojiResponse.emojis && emojiResponse.emojis.length > 0) {
+          const apiEmojis = emojiResponse.emojis.map(emoji => ({
+            emoji: emoji.emoji_char || '❤️',
+            color: emoji.color_hex || '#ff1744',
+            name: emoji.emoji_type?.toLowerCase() || 'love',
+            id: emoji.id,
+            sound: defaultEmojis.find(e => e.name === emoji.emoji_type?.toLowerCase())?.sound || defaultEmojis[0].sound,
+            gradient: defaultEmojis.find(e => e.name === emoji.emoji_type?.toLowerCase())?.gradient || defaultEmojis[0].gradient
+          }));
+          setAvailableEmojis(apiEmojis);
+        } else {
+          setAvailableEmojis(defaultEmojis);
+        }
+
+        // Load initial reaction counts
+        const reactionsResponse = await ApiService.getEventReactions(currentMatch.id);
+        if (reactionsResponse.emoji_counts) {
+          setEmojiCounts(reactionsResponse.emoji_counts);
+          setGlobalReactionCount(reactionsResponse.total_reactions || 0);
+        }
+      } catch (error) {
+        console.error('Failed to load emoji data:', error);
+        setAvailableEmojis(defaultEmojis);
+      }
+    };
+
+    loadEmojis();
+  }, [apiConnected, currentMatch?.id]);
+
+  // WebSocket connection for real-time updates
+  useEffect(() => {
+    if (!apiConnected || !currentMatch?.id) {
+      // Fallback to mock updates
       const interval = setInterval(() => {
         const randomChange = Math.floor(Math.random() * 10) - 5;
         setGlobalReactionCount(prev => Math.max(0, prev + randomChange));
-      }, 3000);
-
+      }, 5000);
+      
       wsRef.current = () => clearInterval(interval);
-    };
+      return () => clearInterval(interval);
+    }
 
-    connectWebSocket();
-    return () => {
-      if (wsRef.current) {
-        wsRef.current();
-      }
-    };
-  }, []);
+    try {
+      // Create WebSocket connection for real-time emoji updates
+      const ws = ApiService.createWebSocketConnection(currentMatch.id);
+      setWsConnection(ws);
+
+      ws.onopen = () => {
+        console.log('WebSocket connected for emoji updates');
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'emoji_reaction') {
+            // Update emoji counts based on real-time data
+            setEmojiCounts(prev => ({
+              ...prev,
+              [data.emoji_id]: (prev[data.emoji_id] || 0) + 1
+            }));
+            setGlobalReactionCount(prev => prev + 1);
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket connection closed');
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+
+      return () => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+      };
+    } catch (error) {
+      console.error('Failed to create WebSocket connection:', error);
+      
+      // Fallback to mock updates
+      const interval = setInterval(() => {
+        const randomChange = Math.floor(Math.random() * 10) - 5;
+        setGlobalReactionCount(prev => Math.max(0, prev + randomChange));
+      }, 5000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [apiConnected, currentMatch?.id]);
 
   // ReactPlayer event handlers
   const handleReady = () => {
@@ -276,6 +362,7 @@ const VideoPlayer = ({ currentMatch }) => {
   }, [isPlaying]);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   const handleEmojiReaction = (emojiData) => {
     // Create dynamic flying emoji animation with randomized trajectory
     const trajectoryType = Math.random();
@@ -324,12 +411,27 @@ const VideoPlayer = ({ currentMatch }) => {
 =======
   // Enhanced emoji reaction handler with sound and improved animations
   const handleEmojiReaction = useCallback((emojiData) => {
+=======
+  // Enhanced emoji reaction handler with API integration
+  const handleEmojiReaction = useCallback(async (emojiData) => {
+>>>>>>> cga-cg908b179b
     // Initialize audio on first interaction
     initializeAudio();
 >>>>>>> cga-cg908b179b
     
     // Play distinct sound for emoji with <50ms delay
     playEmojiSound(emojiData.sound);
+    
+    // Submit reaction to API if connected
+    if (apiConnected && currentMatch?.id && emojiData.id) {
+      try {
+        await ApiService.submitEmojiReaction(currentMatch.id, emojiData.id);
+        console.log('Emoji reaction submitted to API:', emojiData.name);
+      } catch (error) {
+        console.error('Failed to submit emoji reaction:', error);
+        // Continue with local animation even if API call fails
+      }
+    }
     
     // Create enhanced flying animations with natural arcs
     const numFlying = Math.random() > 0.65 ? 2 : 1; // 35% chance for double emoji
@@ -361,10 +463,10 @@ const VideoPlayer = ({ currentMatch }) => {
       }, newFlyingReaction.delay);
     }
     
-    // Update counts with smooth animation
+    // Update counts with smooth animation (local update for immediate feedback)
     setEmojiCounts(prev => ({
       ...prev,
-      [emojiData.name]: prev[emojiData.name] + 1
+      [emojiData.name]: (prev[emojiData.name] || 0) + 1
     }));
     
     setGlobalReactionCount(prev => prev + 1);
@@ -400,7 +502,7 @@ const VideoPlayer = ({ currentMatch }) => {
     }
 
     console.log(`🎵 ${emojiData.name} reaction with ${emojiData.sound.type} sound at ${emojiData.sound.frequency}Hz`);
-  }, [initializeAudio, playEmojiSound]);
+  }, [initializeAudio, playEmojiSound, apiConnected, currentMatch?.id]);
 
   // ReactPlayer controls
   const togglePlayPause = () => {
@@ -696,10 +798,11 @@ const VideoPlayer = ({ currentMatch }) => {
         >
           {/* Premium Glassmorphism Container */}
           <div className="relative">
-            {/* Main Container */}
+            {/* Main Container - Minimal Sleek Design */}
             <div 
-              className="relative bg-gradient-to-r from-black/60 via-gray-900/80 to-black/60 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden"
+              className="relative flex items-center gap-6"
               style={{ 
+<<<<<<< HEAD
                 borderRadius: '28px',
                 padding: '16px 24px',
                 background: 'linear-gradient(135deg, rgba(0,0,0,0.75) 0%, rgba(20,20,20,0.85) 30%, rgba(40,40,40,0.90) 70%, rgba(0,0,0,0.75) 100%)',
@@ -805,44 +908,45 @@ const VideoPlayer = ({ currentMatch }) => {
               
               <div className="relative flex items-center gap-3">
                 {emojis.map((emoji, index) => (
+=======
+                padding: '12px 20px',
+              }}
+            >
+                {(availableEmojis.length > 0 ? availableEmojis : defaultEmojis).map((emoji, index) => (
+>>>>>>> cga-cg908b179b
                   <button
                     key={index}
                     onClick={() => handleEmojiReaction(emoji)}
-                    className="group relative flex flex-col items-center gap-2 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/10 active:scale-95"
+                    className="group relative transition-all duration-300 hover:scale-110 active:scale-95 p-2"
                     style={{ 
                       animationDelay: `${index * 0.08}s`,
-                      minHeight: '72px',
-                      minWidth: '56px',
-                      background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      backdropFilter: 'blur(8px)'
                     }}
                     title={`React with ${emoji.name}`}
-                    aria-label={`React with ${emoji.name}, current count: ${emojiCounts[emoji.name]}`}
+                    aria-label={`React with ${emoji.name}`}
                   >
                     {/* Enhanced Emoji with Dynamic Glow */}
                     <div 
-                      className="relative transition-all duration-400 group-hover:scale-125 group-active:scale-110"
+                      className="relative transition-all duration-400"
                       style={{ 
-                        fontSize: '32px',
+                        fontSize: '36px',
                         lineHeight: '1',
                         filter: `
-                          drop-shadow(0 0 8px ${emoji.color}40) 
-                          drop-shadow(0 0 16px ${emoji.color}20)
-                          brightness(1.1)
+                          drop-shadow(0 0 12px ${emoji.color}60) 
+                          drop-shadow(0 0 24px ${emoji.color}30)
+                          brightness(1.2)
                         `,
-                        textShadow: `0 0 20px ${emoji.color}60`
+                        textShadow: `0 0 30px ${emoji.color}80`
                       }}
                     >
                       {emoji.emoji}
                       
                       {/* Dynamic Pulse Ring on Hover */}
                       <div 
-                        className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-60 transition-all duration-500"
+                        className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-40 transition-all duration-500"
                         style={{ 
-                          background: `radial-gradient(circle, ${emoji.color}25 0%, ${emoji.color}10 40%, transparent 70%)`,
+                          background: `radial-gradient(circle, ${emoji.color}30 0%, ${emoji.color}15 40%, transparent 70%)`,
                           animation: 'pulse 2s infinite',
-                          transform: 'scale(2)'
+                          transform: 'scale(2.5)'
                         }}
                       />
                       
@@ -850,39 +954,15 @@ const VideoPlayer = ({ currentMatch }) => {
                       <div 
                         className="absolute inset-0 rounded-full opacity-0 group-active:opacity-80 transition-opacity duration-200"
                         style={{ 
-                          background: `radial-gradient(circle, ${emoji.color}30 0%, transparent 60%)`,
+                          background: `radial-gradient(circle, ${emoji.color}40 0%, transparent 60%)`,
                           animation: 'ripple 0.6s ease-out',
-                          transform: 'scale(1.5)'
+                          transform: 'scale(2)'
                         }}
                       />
                     </div>
-                    
-                    {/* Elegant Count Display */}
-                    <span 
-                      className="text-white font-semibold transition-all duration-300 group-hover:text-yellow-200 group-hover:scale-110"
-                      style={{ 
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        textShadow: '0 2px 4px rgba(0,0,0,0.6)',
-                        background: `linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%)`,
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text'
-                      }}
-                    >
-                      {emojiCounts[emoji.name]}
-                    </span>
-                    
-                    {/* Hover Glow Enhancement */}
-                    <div 
-                      className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-all duration-400 rounded-2xl"
-                      style={{ 
-                        background: `linear-gradient(135deg, ${emoji.color}20 0%, transparent 50%, ${emoji.color}15 100%)`,
-                        filter: 'blur(2px)'
-                      }}
-                    />
                   </button>
                 ))}
+<<<<<<< HEAD
                 
                 {/* Premium Global Counter */}
                 <div className="flex flex-col items-center gap-2 ml-6 pl-6" style={{
@@ -926,15 +1006,10 @@ const VideoPlayer = ({ currentMatch }) => {
                   </span>
                 </div>
               </div>
+=======
+=======
+>>>>>>> cga-cg908b179b
             </div>
-            
-            {/* Decorative Top Indicator */}
-            <div 
-              className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-gradient-to-br from-white/40 to-white/20 rounded-full"
-              style={{ 
-                boxShadow: '0 0 15px rgba(255,255,255,0.3), inset 0 1px 0 rgba(255,255,255,0.4)' 
-              }}
-            />
           </div>
         </div>
 
