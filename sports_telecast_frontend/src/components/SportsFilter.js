@@ -1,10 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import ApiService from '../services/api';
 
 // PUBLIC_INTERFACE
 const SportsFilter = ({ selectedSport, onSportChange }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  
-  const sports = [
+  const [sports, setSports] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Load sports data from API
+  useEffect(() => {
+    const loadSportsData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Get events to determine available sports
+        const eventsResponse = await ApiService.getEvents(1, 50);
+        const matchesResponse = await ApiService.getMatches(1, 50);
+        
+        // Count sports from both events and matches
+        const sportCounts = {};
+        let totalCount = 0;
+
+        // Process events
+        if (eventsResponse.events) {
+          eventsResponse.events.forEach(event => {
+            const sport = getSportDisplayName(event.sport_type);
+            sportCounts[sport] = (sportCounts[sport] || 0) + 1;
+            totalCount++;
+          });
+        }
+
+        // Process matches
+        if (matchesResponse.matches) {
+          matchesResponse.matches.forEach(match => {
+            const sport = getSportDisplayName(match.sport_type);
+            sportCounts[sport] = (sportCounts[sport] || 0) + 1;
+            totalCount++;
+          });
+        }
+
+        // Convert to sports array
+        const sportsArray = [
+          { name: 'All', count: totalCount }
+        ];
+
+        Object.entries(sportCounts).forEach(([sport, count]) => {
+          sportsArray.push({ name: sport, count });
+        });
+
+        setSports(sportsArray.length > 1 ? sportsArray : getMockSports());
+      } catch (error) {
+        console.error('Failed to load sports data:', error);
+        setSports(getMockSports());
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSportsData();
+  }, []);
+
+  // Helper function to convert sport types
+  const getSportDisplayName = (sportType) => {
+    const sportMap = {
+      'FOOTBALL': 'Football',
+      'BASKETBALL': 'Basketball', 
+      'TENNIS': 'Tennis',
+      'BASEBALL': 'Baseball',
+      'HOCKEY': 'Hockey',
+      'CRICKET': 'Cricket'
+    };
+    return sportMap[sportType] || 'Football';
+  };
+
+  // Fallback mock data
+  const getMockSports = () => [
     { name: 'All', count: 24 },
     { name: 'Football', count: 8 },
     { name: 'Basketball', count: 5 },

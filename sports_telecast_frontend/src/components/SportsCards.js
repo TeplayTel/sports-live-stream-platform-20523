@@ -1,13 +1,86 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import ApiService from '../services/api';
 
 // PUBLIC_INTERFACE
-const SportsCards = ({ selectedSport, onSportChange }) => {
+const SportsCards = ({ selectedSport, onSportChange, apiConnected }) => {
   const [filter, setFilter] = useState('All');
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('viewers');
   const [isLoading, setIsLoading] = useState(false);
-  
-  const matches = [
+  const [matches, setMatches] = useState([]);
+  const [apiError, setApiError] = useState(null);
+
+  // Load matches from API
+  useEffect(() => {
+    const loadMatches = async () => {
+      if (!apiConnected) {
+        // Use fallback mock data if API not connected
+        setMatches(getMockMatches());
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setApiError(null);
+
+        // Load both live and upcoming matches
+        const [liveResponse, upcomingResponse] = await Promise.all([
+          ApiService.getLiveMatches().catch(() => ({ matches: [] })),
+          ApiService.getUpcomingMatches(7, 1, 10).catch(() => ({ matches: [] }))
+        ]);
+
+        const allMatches = [
+          ...liveResponse.matches.map(match => convertMatchFromApi(match, 'LIVE')),
+          ...upcomingResponse.matches.map(match => convertMatchFromApi(match, 'SCHEDULED'))
+        ];
+
+        setMatches(allMatches.length > 0 ? allMatches : getMockMatches());
+      } catch (error) {
+        console.error('Failed to load matches:', error);
+        setApiError('Failed to load matches from API');
+        setMatches(getMockMatches());
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadMatches();
+  }, [apiConnected, selectedSport]);
+
+  // Convert API match data to component format
+  const convertMatchFromApi = (apiMatch, defaultStatus = 'SCHEDULED') => {
+    return {
+      id: apiMatch.id,
+      homeTeam: apiMatch.home_team?.name || 'Home Team',
+      awayTeam: apiMatch.away_team?.name || 'Away Team',
+      homeScore: apiMatch.home_score || 0,
+      awayScore: apiMatch.away_score || 0,
+      status: apiMatch.status || defaultStatus,
+      time: apiMatch.match_time || (defaultStatus === 'LIVE' ? "0'" : 'TBD'),
+      competition: apiMatch.event?.name || 'Tournament',
+      sport: getSportDisplayName(apiMatch.sport_type || 'FOOTBALL'),
+      viewers: defaultStatus === 'LIVE' ? Math.floor(Math.random() * 30000) + 5000 : 0,
+      trending: Math.random() > 0.7,
+      featured: Math.random() > 0.8,
+      thumbnail: '/api/placeholder/400/225'
+    };
+  };
+
+  // Helper function to convert sport types
+  const getSportDisplayName = (sportType) => {
+    const sportMap = {
+      'FOOTBALL': 'Football',
+      'BASKETBALL': 'Basketball',
+      'TENNIS': 'Tennis',
+      'BASEBALL': 'Baseball',
+      'HOCKEY': 'Hockey',
+      'CRICKET': 'Cricket'
+    };
+    return sportMap[sportType] || 'Football';
+  };
+
+  // Fallback mock data
+  const getMockMatches = () => [
     {
       id: 1,
       homeTeam: 'Liverpool',
@@ -55,47 +128,17 @@ const SportsCards = ({ selectedSport, onSportChange }) => {
     },
     {
       id: 4,
-      homeTeam: 'Federer',
-      awayTeam: 'Nadal',
-      homeScore: 2,
-      awayScore: 1,
-      status: 'RECORDED',
-      time: 'Highlights',
-      competition: 'Wimbledon',
-      sport: 'Tennis',
-      viewers: 0,
-      trending: false,
-      featured: true,
-      thumbnail: '/api/placeholder/400/225'
-    },
-    {
-      id: 5,
       homeTeam: 'Yankees',
       awayTeam: 'Red Sox',
       homeScore: 7,
       awayScore: 4,
-      status: 'FINAL',
-      time: '9th',
+      status: 'SCHEDULED',
+      time: '15:30',
       competition: 'MLB',
       sport: 'Baseball',
       viewers: 0,
       trending: false,
-      featured: false,
-      thumbnail: '/api/placeholder/400/225'
-    },
-    {
-      id: 6,
-      homeTeam: 'Rangers',
-      awayTeam: 'Bruins',
-      homeScore: 3,
-      awayScore: 2,
-      status: 'LIVE',
-      time: '2nd Period',
-      competition: 'NHL',
-      sport: 'Hockey',
-      viewers: 8200,
-      trending: false,
-      featured: false,
+      featured: true,
       thumbnail: '/api/placeholder/400/225'
     }
   ];
@@ -374,6 +417,16 @@ const SportsCards = ({ selectedSport, onSportChange }) => {
           </div>
         </div>
       </div>
+
+      {/* API Error Display */}
+      {apiError && (
+        <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4 mb-6">
+          <div className="flex items-center space-x-2 text-yellow-500">
+            <span>⚠️</span>
+            <span className="text-sm font-medium">{apiError}</span>
+          </div>
+        </div>
+      )}
 
       {/* Loading State */}
       {isLoading && (

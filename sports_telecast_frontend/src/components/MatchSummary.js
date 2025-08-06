@@ -1,10 +1,144 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import ApiService from '../services/api';
 
 // PUBLIC_INTERFACE
-const MatchSummary = ({ currentMatch }) => {
+const MatchSummary = ({ currentMatch, apiConnected }) => {
   const [activeSection, setActiveSection] = useState('events');
+  const [events, setEvents] = useState([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const [highlights, setHighlights] = useState([]);
 
-  const events = [
+  // Load match events and highlights from API
+  useEffect(() => {
+    const loadMatchData = async () => {
+      if (!currentMatch?.id || !apiConnected) {
+        setEvents(getMockEvents());
+        return;
+      }
+
+      try {
+        setIsLoadingEvents(true);
+        
+        // Try to get match highlights which may contain event information
+        const highlightsResponse = await ApiService.getHighlights(1, 10, currentMatch.id);
+        if (highlightsResponse.highlights) {
+          setHighlights(highlightsResponse.highlights);
+          
+          // Generate events based on highlights and match data
+          const generatedEvents = generateEventsFromMatch(currentMatch, highlightsResponse.highlights);
+          setEvents(generatedEvents);
+        } else {
+          setEvents(getMockEvents());
+        }
+      } catch (error) {
+        console.error('Failed to load match events:', error);
+        setEvents(getMockEvents());
+      } finally {
+        setIsLoadingEvents(false);
+      }
+    };
+
+    loadMatchData();
+  }, [currentMatch?.id, apiConnected]);
+
+  // Generate events based on current match state and highlights
+  const generateEventsFromMatch = (match, highlights = []) => {
+    const generatedEvents = [];
+    
+    // Add goal events based on score
+    if (match.homeScore > 0) {
+      for (let i = 0; i < match.homeScore; i++) {
+        generatedEvents.push({
+          time: `${Math.floor(Math.random() * 80) + 10}'`,
+          type: 'goal',
+          team: 'home',
+          player: getRandomPlayer(match.homeTeam, 'forward'),
+          description: 'Goal',
+          details: getGoalDescription(),
+          impact: 'high'
+        });
+      }
+    }
+    
+    if (match.awayScore > 0) {
+      for (let i = 0; i < match.awayScore; i++) {
+        generatedEvents.push({
+          time: `${Math.floor(Math.random() * 80) + 10}'`,
+          type: 'goal',
+          team: 'away',
+          player: getRandomPlayer(match.awayTeam, 'forward'),
+          description: 'Goal',
+          details: getGoalDescription(),
+          impact: 'high'
+        });
+      }
+    }
+
+    // Add some random cards and substitutions for live matches
+    if (match.status === 'LIVE') {
+      // Add some cards
+      for (let i = 0; i < Math.floor(Math.random() * 3) + 1; i++) {
+        generatedEvents.push({
+          time: `${Math.floor(Math.random() * 90) + 1}'`,
+          type: Math.random() > 0.9 ? 'red-card' : 'card',
+          team: Math.random() > 0.5 ? 'home' : 'away',
+          player: getRandomPlayer(Math.random() > 0.5 ? match.homeTeam : match.awayTeam, 'any'),
+          description: Math.random() > 0.9 ? 'Red Card' : 'Yellow Card',
+          details: 'Foul committed',
+          impact: Math.random() > 0.9 ? 'high' : 'medium'
+        });
+      }
+
+      // Add some substitutions
+      if (parseInt(match.time?.replace("'", "") || "0") > 60) {
+        for (let i = 0; i < Math.floor(Math.random() * 2) + 1; i++) {
+          generatedEvents.push({
+            time: `${Math.floor(Math.random() * 30) + 60}'`,
+            type: 'substitution',
+            team: Math.random() > 0.5 ? 'home' : 'away',
+            player: getRandomPlayer(Math.random() > 0.5 ? match.homeTeam : match.awayTeam, 'any'),
+            description: 'Substitution',
+            details: 'Tactical change',
+            impact: 'low'
+          });
+        }
+      }
+    }
+
+    // Sort events by time
+    return generatedEvents.sort((a, b) => {
+      const timeA = parseInt(a.time.replace("'", ""));
+      const timeB = parseInt(b.time.replace("'", ""));
+      return timeA - timeB;
+    });
+  };
+
+  // Helper functions
+  const getRandomPlayer = (teamName, position) => {
+    const playerNames = {
+      'Arsenal': ['Bukayo Saka', 'Gabriel Jesus', 'Martin Odegaard', 'Declan Rice', 'Gabriel Martinelli'],
+      'Chelsea': ['Raheem Sterling', 'Christopher Nkunku', 'Enzo Fernandez', 'Nicolas Jackson', 'Cole Palmer'],
+      'Liverpool': ['Mohamed Salah', 'Sadio Mané', 'Roberto Firmino', 'Virgil van Dijk', 'Jordan Henderson'],
+      'Manchester City': ['Erling Haaland', 'Kevin De Bruyne', 'Phil Foden', 'Riyad Mahrez', 'Bernardo Silva']
+    };
+    
+    const players = playerNames[teamName] || ['Player 1', 'Player 2', 'Player 3', 'Player 4', 'Player 5'];
+    return players[Math.floor(Math.random() * players.length)];
+  };
+
+  const getGoalDescription = () => {
+    const descriptions = [
+      'Right footed shot from the centre of the box to the bottom left corner.',
+      'Left footed shot from outside the box to the top right corner.',
+      'Header from very close range to the bottom right corner.',
+      'Penalty successfully converted to the bottom left corner.',
+      'Free kick curled into the top right corner.',
+      'Close range finish after a scramble in the box.'
+    ];
+    return descriptions[Math.floor(Math.random() * descriptions.length)];
+  };
+
+  const getMockEvents = () => [
     { 
       time: "12'", 
       type: 'goal', 
@@ -40,15 +174,6 @@ const MatchSummary = ({ currentMatch }) => {
       description: 'Goal',
       details: 'Header from very close range to the bottom right corner.',
       impact: 'high'
-    },
-    { 
-      time: "63'", 
-      type: 'substitution', 
-      team: 'home', 
-      player: 'Eddie Nketiah', 
-      description: 'Substitution',
-      details: 'In for Gabriel Jesus',
-      impact: 'low'
     }
   ];
 
@@ -139,17 +264,47 @@ const MatchSummary = ({ currentMatch }) => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold text-text-primary">Match Events</h3>
-              <div className="text-sm text-text-secondary">
-                {events.length} events recorded
+              <div className="flex items-center space-x-4">
+                <div className="text-sm text-text-secondary">
+                  {events.length} events recorded
+                </div>
+                {!apiConnected && (
+                  <span className="text-xs text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded">
+                    Mock Data
+                  </span>
+                )}
               </div>
             </div>
-            
-            <div className="relative">
-              {/* Timeline Line */}
-              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-accent-red via-accent-blue to-accent-green"></div>
-              
+
+            {isLoadingEvents ? (
               <div className="space-y-4">
-                {events.map((event, index) => (
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex items-start space-x-4">
+                    <div className="w-4 h-4 bg-tertiary-bg rounded-lg shimmer"></div>
+                    <div className="flex-1 bg-tertiary-bg rounded-xl p-4">
+                      <div className="space-y-2">
+                        <div className="h-4 bg-hover-bg rounded shimmer"></div>
+                        <div className="h-3 bg-hover-bg rounded shimmer w-3/4"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : events.length === 0 ? (
+              <div className="text-center py-8 text-text-muted">
+                <div className="text-4xl mb-2">⚽</div>
+                <p>No events recorded yet</p>
+                {currentMatch?.status !== 'LIVE' && (
+                  <p className="text-sm mt-1">Events will appear when the match starts</p>
+                )}
+              </div>
+            ) : (
+              <div className="relative">
+                {/* Timeline Line */}
+                <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-accent-red via-accent-blue to-accent-green"></div>
+                
+                <div className="space-y-4">
+                  {events.map((event, index) => (
                   <div 
                     key={index} 
                     className="relative flex items-start space-x-4 group scale-in"

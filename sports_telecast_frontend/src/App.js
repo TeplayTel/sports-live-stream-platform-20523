@@ -6,26 +6,93 @@ import MatchInfoSection from './components/MatchInfoSection';
 import AnalyticsPanel from './components/AnalyticsPanel';
 import MatchSummary from './components/MatchSummary';
 import SportsCards from './components/SportsCards';
+import ApiService from './services/api';
 import './App.css';
 
 // PUBLIC_INTERFACE
 function App() {
   const [selectedSport, setSelectedSport] = useState('All');
-  const [viewerCount, setViewerCount] = useState(12847);
+  const [viewerCount, setViewerCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [theme] = useState('dark');
-  
-  const [currentMatch] = useState({
-    homeTeam: 'Arsenal',
-    awayTeam: 'Chelsea', 
-    homeScore: 2,
-    awayScore: 1,
-    status: 'LIVE',
-    time: "67'",
-    competition: 'Premier League'
-  });
+  const [currentMatch, setCurrentMatch] = useState(null);
+  const [apiError, setApiError] = useState(null);
+  const [apiConnected, setApiConnected] = useState(false);
 
-  // Simulate real-time viewer count updates with more realistic fluctuation
+  // Load initial data from backend
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        setIsLoading(true);
+        setApiError(null);
+
+        // Check API health first
+        const healthCheck = await ApiService.healthCheck();
+        console.log('API Health:', healthCheck);
+        setApiConnected(true);
+
+        // Get live matches
+        const liveMatches = await ApiService.getLiveMatches();
+        if (liveMatches.matches && liveMatches.matches.length > 0) {
+          // Set the first live match as current match
+          const match = liveMatches.matches[0];
+          setCurrentMatch({
+            id: match.id,
+            homeTeam: match.home_team?.name || 'Home Team',
+            awayTeam: match.away_team?.name || 'Away Team',
+            homeScore: match.home_score || 0,
+            awayScore: match.away_score || 0,
+            status: match.status || 'SCHEDULED',
+            time: match.match_time || '0\'',
+            competition: match.event?.name || 'Competition',
+            sport: match.sport_type || 'Football'
+          });
+          
+          // Simulate viewer count based on match importance
+          setViewerCount(Math.floor(Math.random() * 20000) + 5000);
+        } else {
+          // Fallback to mock data if no live matches
+          setCurrentMatch({
+            id: 'mock-match-1',
+            homeTeam: 'Arsenal',
+            awayTeam: 'Chelsea', 
+            homeScore: 2,
+            awayScore: 1,
+            status: 'LIVE',
+            time: "67'",
+            competition: 'Premier League',
+            sport: 'Football'
+          });
+          setViewerCount(12847);
+        }
+
+      } catch (error) {
+        console.error('Failed to load initial data:', error);
+        setApiError('Failed to connect to backend. Using mock data.');
+        setApiConnected(false);
+        
+        // Fallback to mock data
+        setCurrentMatch({
+          id: 'mock-match-1',
+          homeTeam: 'Arsenal',
+          awayTeam: 'Chelsea', 
+          homeScore: 2,
+          awayScore: 1,
+          status: 'LIVE',
+          time: "67'",
+          competition: 'Premier League',
+          sport: 'Football'
+        });
+        setViewerCount(12847);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, []);
+
+  // Real-time viewer count updates
   useEffect(() => {
     const interval = setInterval(() => {
       setViewerCount(prev => {
@@ -33,18 +100,9 @@ function App() {
         const newCount = Math.max(1000, prev + change); // Minimum 1000 viewers
         return newCount;
       });
-    }, 3000); // Update every 3 seconds for more dynamic feel
+    }, 5000); // Update every 5 seconds
     
     return () => clearInterval(interval);
-  }, []);
-
-  // Simulate app loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-    
-    return () => clearTimeout(timer);
   }, []);
 
   // Handle sport change with smooth transition
@@ -68,7 +126,16 @@ function App() {
           <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             SportsStream
           </h2>
-          <p className="text-text-secondary">Loading your premium sports experience...</p>
+          <p className="text-text-secondary">
+            {apiConnected 
+              ? 'Loading your premium sports experience...' 
+              : 'Connecting to backend API...'}
+          </p>
+          {apiError && (
+            <p className="text-yellow-500 text-sm mt-2">
+              ⚠️ {apiError}
+            </p>
+          )}
         </div>
         <div className="flex space-x-1 justify-center">
           {[0, 1, 2].map((i) => (
@@ -99,6 +166,8 @@ function App() {
       {/* Header */}
       <Header 
         viewerCount={viewerCount}
+        apiConnected={apiConnected}
+        apiError={apiError}
       />
       
       {/* Main Content */}
@@ -110,9 +179,11 @@ function App() {
         />
         
         {/* Match Info Section */}
-        <div className="max-w-7xl mx-auto p-4 sm:p-6 pt-0">
-          <MatchInfoSection currentMatch={currentMatch} />
-        </div>
+        {currentMatch && (
+          <div className="max-w-7xl mx-auto p-4 sm:p-6 pt-0">
+            <MatchInfoSection currentMatch={currentMatch} />
+          </div>
+        )}
         
         {/* Main Layout Grid */}
         <div className="max-w-7xl mx-auto p-4 sm:p-6">
@@ -120,17 +191,28 @@ function App() {
             {/* Main Video Area */}
             <div className="lg:col-span-8 space-y-6">
               <div className="slide-in-left">
-                <VideoPlayer currentMatch={currentMatch} />
+                <VideoPlayer 
+                  currentMatch={currentMatch} 
+                  apiConnected={apiConnected}
+                />
               </div>
-              <div className="slide-in-left" style={{ animationDelay: '0.1s' }}>
-                <MatchSummary currentMatch={currentMatch} />
-              </div>
+              {currentMatch && (
+                <div className="slide-in-left" style={{ animationDelay: '0.1s' }}>
+                  <MatchSummary 
+                    currentMatch={currentMatch}
+                    apiConnected={apiConnected}
+                  />
+                </div>
+              )}
             </div>
             
             {/* Right Sidebar */}
             <div className="lg:col-span-4">
               <div className="slide-in-right">
-                <AnalyticsPanel />
+                <AnalyticsPanel 
+                  currentMatch={currentMatch}
+                  apiConnected={apiConnected}
+                />
               </div>
             </div>
           </div>
@@ -142,6 +224,7 @@ function App() {
             <SportsCards 
               selectedSport={selectedSport} 
               onSportChange={handleSportChange}
+              apiConnected={apiConnected}
             />
           </div>
         </div>

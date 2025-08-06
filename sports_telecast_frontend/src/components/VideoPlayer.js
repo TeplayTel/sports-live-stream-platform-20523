@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import ReactPlayer from 'react-player';
+import ApiService from '../services/api';
 
 // PUBLIC_INTERFACE
-const VideoPlayer = ({ currentMatch }) => {
+const VideoPlayer = ({ currentMatch, apiConnected }) => {
   /**
    * Enhanced video player component with ReactPlayer, premium emoji reactions, sound effects, and natural flying animations
    * Features sleek glassmorphism design, smooth animations, distinct sounds per emoji, and improved user experience
@@ -34,9 +35,11 @@ const VideoPlayer = ({ currentMatch }) => {
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [videoError, setVideoError] = useState(null);
   const [isBuffering, setIsBuffering] = useState(false);
+  const [availableEmojis, setAvailableEmojis] = useState([]);
+  const [wsConnection, setWsConnection] = useState(null);
   
-  // Enhanced emoji configuration with sound frequencies and colors
-  const emojis = [
+  // Enhanced emoji configuration with sound frequencies and colors (fallback)
+  const defaultEmojis = [
     { 
       emoji: '❤️', 
       color: '#ff1744', 
@@ -168,26 +171,109 @@ const VideoPlayer = ({ currentMatch }) => {
     }
   }, [createEmojiSound]);
 
-  // Mock WebSocket for real-time reaction updates
+  // Load emoji data from API and setup WebSocket
   useEffect(() => {
-    const connectWebSocket = () => {
-      console.log('Connecting to mock WebSocket for reactions...');
-      
+    const loadEmojis = async () => {
+      if (!apiConnected || !currentMatch?.id) {
+        setAvailableEmojis(defaultEmojis);
+        return;
+      }
+
+      try {
+        // Load available emojis from API
+        const emojiResponse = await ApiService.getEmojis(1, 10);
+        if (emojiResponse.emojis && emojiResponse.emojis.length > 0) {
+          const apiEmojis = emojiResponse.emojis.map(emoji => ({
+            emoji: emoji.emoji_char || '❤️',
+            color: emoji.color_hex || '#ff1744',
+            name: emoji.emoji_type?.toLowerCase() || 'love',
+            id: emoji.id,
+            sound: defaultEmojis.find(e => e.name === emoji.emoji_type?.toLowerCase())?.sound || defaultEmojis[0].sound,
+            gradient: defaultEmojis.find(e => e.name === emoji.emoji_type?.toLowerCase())?.gradient || defaultEmojis[0].gradient
+          }));
+          setAvailableEmojis(apiEmojis);
+        } else {
+          setAvailableEmojis(defaultEmojis);
+        }
+
+        // Load initial reaction counts
+        const reactionsResponse = await ApiService.getEventReactions(currentMatch.id);
+        if (reactionsResponse.emoji_counts) {
+          setEmojiCounts(reactionsResponse.emoji_counts);
+          setGlobalReactionCount(reactionsResponse.total_reactions || 0);
+        }
+      } catch (error) {
+        console.error('Failed to load emoji data:', error);
+        setAvailableEmojis(defaultEmojis);
+      }
+    };
+
+    loadEmojis();
+  }, [apiConnected, currentMatch?.id]);
+
+  // WebSocket connection for real-time updates
+  useEffect(() => {
+    if (!apiConnected || !currentMatch?.id) {
+      // Fallback to mock updates
       const interval = setInterval(() => {
         const randomChange = Math.floor(Math.random() * 10) - 5;
         setGlobalReactionCount(prev => Math.max(0, prev + randomChange));
-      }, 3000);
-
+      }, 5000);
+      
       wsRef.current = () => clearInterval(interval);
-    };
+      return () => clearInterval(interval);
+    }
 
-    connectWebSocket();
-    return () => {
-      if (wsRef.current) {
-        wsRef.current();
-      }
-    };
-  }, []);
+    try {
+      // Create WebSocket connection for real-time emoji updates
+      const ws = ApiService.createWebSocketConnection(currentMatch.id);
+      setWsConnection(ws);
+
+      ws.onopen = () => {
+        console.log('WebSocket connected for emoji updates');
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'emoji_reaction') {
+            // Update emoji counts based on real-time data
+            setEmojiCounts(prev => ({
+              ...prev,
+              [data.emoji_id]: (prev[data.emoji_id] || 0) + 1
+            }));
+            setGlobalReactionCount(prev => prev + 1);
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket connection closed');
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+
+      return () => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+      };
+    } catch (error) {
+      console.error('Failed to create WebSocket connection:', error);
+      
+      // Fallback to mock updates
+      const interval = setInterval(() => {
+        const randomChange = Math.floor(Math.random() * 10) - 5;
+        setGlobalReactionCount(prev => Math.max(0, prev + randomChange));
+      }, 5000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [apiConnected, currentMatch?.id]);
 
   // ReactPlayer event handlers
   const handleReady = () => {
@@ -275,13 +361,24 @@ const VideoPlayer = ({ currentMatch }) => {
     };
   }, [isPlaying]);
 
-  // Enhanced emoji reaction handler with sound and improved animations
-  const handleEmojiReaction = useCallback((emojiData) => {
+  // Enhanced emoji reaction handler with API integration
+  const handleEmojiReaction = useCallback(async (emojiData) => {
     // Initialize audio on first interaction
     initializeAudio();
     
     // Play distinct sound for emoji with <50ms delay
     playEmojiSound(emojiData.sound);
+    
+    // Submit reaction to API if connected
+    if (apiConnected && currentMatch?.id && emojiData.id) {
+      try {
+        await ApiService.submitEmojiReaction(currentMatch.id, emojiData.id);
+        console.log('Emoji reaction submitted to API:', emojiData.name);
+      } catch (error) {
+        console.error('Failed to submit emoji reaction:', error);
+        // Continue with local animation even if API call fails
+      }
+    }
     
     // Create enhanced flying animations with natural arcs
     const numFlying = Math.random() > 0.65 ? 2 : 1; // 35% chance for double emoji
@@ -313,10 +410,10 @@ const VideoPlayer = ({ currentMatch }) => {
       }, newFlyingReaction.delay);
     }
     
-    // Update counts with smooth animation
+    // Update counts with smooth animation (local update for immediate feedback)
     setEmojiCounts(prev => ({
       ...prev,
-      [emojiData.name]: prev[emojiData.name] + 1
+      [emojiData.name]: (prev[emojiData.name] || 0) + 1
     }));
     
     setGlobalReactionCount(prev => prev + 1);
@@ -334,7 +431,7 @@ const VideoPlayer = ({ currentMatch }) => {
     }
 
     console.log(`🎵 ${emojiData.name} reaction with ${emojiData.sound.type} sound at ${emojiData.sound.frequency}Hz`);
-  }, [initializeAudio, playEmojiSound]);
+  }, [initializeAudio, playEmojiSound, apiConnected, currentMatch?.id]);
 
   // ReactPlayer controls
   const togglePlayPause = () => {
@@ -496,7 +593,7 @@ const VideoPlayer = ({ currentMatch }) => {
                 padding: '12px 20px',
               }}
             >
-                {emojis.map((emoji, index) => (
+                {(availableEmojis.length > 0 ? availableEmojis : defaultEmojis).map((emoji, index) => (
                   <button
                     key={index}
                     onClick={() => handleEmojiReaction(emoji)}
