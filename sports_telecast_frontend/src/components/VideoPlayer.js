@@ -500,49 +500,67 @@ const VideoPlayer = ({ currentMatch }) => {
                   <button
                     key={index}
                     onClick={() => handleEmojiReaction(emoji)}
-                    className="group relative transition-all duration-300 hover:scale-110 active:scale-95 p-2"
-                    style={{ 
-                      animationDelay: `${index * 0.08}s`,
+                    className="emoji-button group relative transition-transform duration-200 ease-in-out hover:scale-110 active:scale-90 px-2 py-1 focus:outline-none"
+                    style={{
+                      animationDelay: `${index * 0.09}s`,
+                      borderRadius: '8px',
+                      minWidth: '44px',
+                      minHeight: '44px',
+                      marginRight: index === emojis.length - 1 ? 0 : 10,
+                      boxShadow: `0 2px 8px ${emoji.color}33`
                     }}
+                    tabIndex={0}
                     title={`React with ${emoji.name}`}
                     aria-label={`React with ${emoji.name}`}
                   >
-                    {/* Enhanced Emoji with Dynamic Glow */}
-                    <div 
-                      className="relative transition-all duration-400"
-                      style={{ 
-                        fontSize: '36px',
-                        lineHeight: '1',
-                        filter: `
-                          drop-shadow(0 0 12px ${emoji.color}60) 
-                          drop-shadow(0 0 24px ${emoji.color}30)
-                          brightness(1.2)
-                        `,
-                        textShadow: `0 0 30px ${emoji.color}80`
+                    <div
+                      className="relative"
+                      style={{
+                        fontSize: '32px',
+                        lineHeight: 1,
+                        // Add focus and hover ring for accessibility/visual
+                        filter: `drop-shadow(0 0 10px ${emoji.color}99) drop-shadow(0 0 16px ${emoji.color}33) brightness(1.2)`,
+                        transition: 'filter 0.2s cubic-bezier(0.4,0,0.2,1)'
                       }}
                     >
                       {emoji.emoji}
-                      
-                      {/* Dynamic Pulse Ring on Hover */}
-                      <div 
-                        className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-40 transition-all duration-500"
-                        style={{ 
-                          background: `radial-gradient(circle, ${emoji.color}30 0%, ${emoji.color}15 40%, transparent 70%)`,
-                          animation: 'pulse 2s infinite',
-                          transform: 'scale(2.5)'
+                      {/* Hover glow/pulse */}
+                      <div
+                        className="absolute inset-0 rounded-full pointer-events-none"
+                        style={{
+                          boxShadow: `0 0 20px 5px ${emoji.color}33`,
+                          opacity: 0,
+                          transition: 'opacity 0.25s cubic-bezier(0.4,0,0.2,1)'
                         }}
                       />
-                      
-                      {/* Click Ripple Effect */}
-                      <div 
-                        className="absolute inset-0 rounded-full opacity-0 group-active:opacity-80 transition-opacity duration-200"
-                        style={{ 
-                          background: `radial-gradient(circle, ${emoji.color}40 0%, transparent 60%)`,
-                          animation: 'ripple 0.6s ease-out',
-                          transform: 'scale(2)'
+                      {/* Dynamic Pulse */}
+                      <div
+                        className="absolute inset-0 rounded-full pointer-events-none transition-opacity duration-300"
+                        style={{
+                          background: `radial-gradient(circle at 50% 50%, ${emoji.color}33 15%, transparent 70%)`,
+                          opacity: 0,
+                          animation: 'glow-pulse 1.4s infinite'
                         }}
                       />
                     </div>
+                    {/* Counter with gradient and pulse transition */}
+                    <span
+                      className="block mt-2 w-full text-sm font-bold text-gradient-accent transition-all duration-200 ease-in-out text-center"
+                      style={{
+                        fontFamily: 'Inter, Helvetica, Arial, sans-serif',
+                        fontWeight: 600,
+                        letterSpacing: '.3px',
+                        padding: '2px 0',
+                        background: 'linear-gradient(90deg,#fff,#f093fb 40%,#f5576c 70%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        textShadow: `0 1px 3px ${emoji.color}55`,
+                        minWidth: '24px'
+                      }}
+                      aria-live="polite"
+                    >
+                      {emojiCounts[emoji.name]}
+                    </span>
                   </button>
                 ))}
 =======
