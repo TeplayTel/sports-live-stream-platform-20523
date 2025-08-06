@@ -474,7 +474,7 @@ const VideoPlayer = ({ currentMatch }) => {
           </div>
         ))}
 
-        {/* Emoji Bar Capsule */}
+        {/* Sleek Emoji Bar */}
         <div
           className={`absolute left-1/2 transform -translate-x-1/2 transition-all duration-700 ease-out ${
             showEmojiBar ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'
@@ -484,91 +484,111 @@ const VideoPlayer = ({ currentMatch }) => {
             zIndex: 1000,
             pointerEvents: showEmojiBar ? 'auto' : 'none',
             width: 'auto',
-            minWidth: 'min(340px, 96vw)',
-            maxWidth: '98vw'
+            minWidth: 'min(480px, 90vw)',
+            maxWidth: '90vw'
           }}
           onMouseEnter={() => setShowEmojiBar(true)}
           onMouseLeave={() => setShowEmojiBar(false)}
         >
           <div
-            className="emoji-bar px-6 py-3 flex items-center gap-4"
+            className="emoji-bar flex items-center justify-between"
             style={{
-              background: 'rgba(0, 0, 0, 0.75)',
-              borderRadius: '16px',
-              border: '2px solid rgba(255,255,255,0.17)',
-              boxShadow: '0 8px 36px 0 rgba(0,0,0,0.33), 0 2px 10px 0 rgba(0,0,0,0.15)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: 56,
-              maxWidth: '96vw',
+              background: 'rgba(0, 0, 0, 0.8)',
+              borderRadius: '24px',
+              border: '1px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 4px 24px 0 rgba(0,0,0,0.4), 0 2px 8px 0 rgba(0,0,0,0.2)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              height: '44px',
+              padding: '0 20px',
               pointerEvents: 'auto',
-              transition: 'box-shadow 0.2s, border-color 0.2s',
-              paddingTop: 12, paddingBottom: 12,
-              paddingLeft: 24, paddingRight: 24,
+              transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
             }}
           >
-            <div style={{ display: 'flex', gap: '16px' }}>
+            {/* Emoji Icons Container */}
+            <div 
+              className="flex items-center justify-center flex-1"
+              style={{ 
+                display: 'flex', 
+                gap: '20px',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+            >
               {emojis.map((emoji, index) => (
                 <button
                   key={index}
                   onClick={() => handleEmojiReaction(emoji)}
-                  className="emoji-button flex flex-col items-center justify-center transition-transform duration-200 ease-in-out hover:scale-110 focus:scale-105 active:scale-95"
+                  className="emoji-button flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-125 focus:scale-110 active:scale-95"
                   style={{
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    borderRadius: '10px',
-                    padding: '6px 10px',
-                    margin: 0,
-                    minWidth: 40,
-                    minHeight: 40,
+                    borderRadius: '50%',
+                    width: '36px',
+                    height: '36px',
                     cursor: 'pointer',
-                    transition: 'background 0.15s, transform 0.15s',
-                    boxShadow: `0 2px 8px ${emoji.color}22`,
-                    gap: 2,
+                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                   tabIndex={0}
                   title={`React with ${emoji.name}`}
                   aria-label={`React with ${emoji.name}`}
                   onMouseDown={e => e.preventDefault()}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                    e.currentTarget.style.boxShadow = `0 0 16px ${emoji.color}40`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
                 >
                   <span
                     style={{
-                      fontSize: 28,
+                      fontSize: '24px',
                       lineHeight: 1,
-                      transition: 'filter 0.2s cubic-bezier(0.4,0,0.2,1), transform 0.14s',
-                      filter: `drop-shadow(0 0 8px ${emoji.color}55) brightness(1.23)`,
+                      transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                      filter: `drop-shadow(0 0 6px ${emoji.color}60) brightness(1.1)`,
                       userSelect: 'none',
                     }}
                     className="select-none"
                   >
                     {emoji.emoji}
                   </span>
-                  <span
-                    className="block mt-1 w-full text-xs font-bold text-gradient-accent transition-all duration-200 ease-in-out text-center"
-                    style={{
-                      fontFamily: 'Inter, Helvetica, Arial, sans-serif',
-                      fontWeight: 600,
-                      fontSize: 14,
-                      letterSpacing: '.2px',
-                      padding: '1px 2px',
-                      background: 'linear-gradient(90deg,#fff,#f093fb 40%,#f5576c 70%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                      textShadow: `0 1px 2px #111c33cc`,
-                      minWidth: 20,
-                      textAlign: 'center',
-                      transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)',
-                    }}
-                    aria-live="polite"
-                  >
-                    {emojiCounts[emoji.name]}
-                  </span>
                 </button>
               ))}
+            </div>
+
+            {/* Total Reaction Count */}
+            <div 
+              className="flex items-center justify-center"
+              style={{
+                minWidth: '80px',
+                height: '32px',
+                background: 'rgba(255,255,255,0.15)',
+                borderRadius: '16px',
+                padding: '0 12px',
+                marginLeft: '16px',
+              }}
+            >
+              <span
+                className="text-center font-bold transition-all duration-300"
+                style={{
+                  fontFamily: 'Inter, Helvetica, Arial, sans-serif',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  color: '#ffffff',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                  letterSpacing: '0.3px',
+                }}
+                aria-live="polite"
+                aria-label={`Total reactions: ${globalReactionCount}`}
+              >
+                {globalReactionCount.toLocaleString()}
+              </span>
             </div>
           </div>
         </div>
