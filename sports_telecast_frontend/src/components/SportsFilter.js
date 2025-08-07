@@ -1,18 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // PUBLIC_INTERFACE
 const SportsFilter = ({ selectedSport, onSportChange }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  
-  const sports = [
-    { name: 'All', count: 24 },
-    { name: 'Football', count: 8 },
-    { name: 'Basketball', count: 5 },
-    { name: 'Tennis', count: 3 },
-    { name: 'Baseball', count: 4 },
-    { name: 'Hockey', count: 2 },
-    { name: 'Cricket', count: 2 }
-  ];
+  const [sports, setSports] = useState([
+    { name: 'All', count: 0 }
+  ]);
+  const [loading, setLoading] = useState(true);
+
+  // Attempt to get sports dynamically from API
+  useEffect(() => {
+    setLoading(true);
+    const fetchSports = async () => {
+      try {
+        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+        // Fetch all matches, get unique sport types and counts
+        let res = await fetch(`${apiUrl}/matches/`);
+        let data = await res.json();
+        if (data.matches && Array.isArray(data.matches)) {
+          const sportsMap = {};
+          data.matches.forEach((match) => {
+            if (match.sport_type) {
+              const sport = match.sport_type.charAt(0).toUpperCase() + match.sport_type.slice(1);
+              sportsMap[sport] = (sportsMap[sport] || 0) + 1;
+            }
+          });
+          // Fallback static order if no data
+          let arr = [{ name: 'All', count: data.matches.length }];
+          Object.keys(sportsMap).forEach(k => arr.push({ name: k, count: sportsMap[k] }));
+          setSports(arr);
+        } else {
+          setSports([
+            { name: 'All', count: 0 },
+            { name: 'Football', count: 0 },
+            { name: 'Basketball', count: 0 },
+            { name: 'Tennis', count: 0 },
+            { name: 'Baseball', count: 0 },
+            { name: 'Hockey', count: 0 },
+            { name: 'Cricket', count: 0 }
+          ]);
+        }
+      } catch (e) {
+        // fallback to static
+        setSports([
+          { name: 'All', count: 0 },
+          { name: 'Football', count: 0 },
+          { name: 'Basketball', count: 0 },
+          { name: 'Tennis', count: 0 },
+          { name: 'Baseball', count: 0 },
+          { name: 'Hockey', count: 0 },
+          { name: 'Cricket', count: 0 }
+        ]);
+      }
+      setLoading(false);
+    };
+    fetchSports();
+  }, []);
 
   const handleSportClick = (sportName) => {
     onSportChange(sportName);
@@ -49,7 +92,11 @@ const SportsFilter = ({ selectedSport, onSportChange }) => {
           isExpanded ? 'block' : 'hidden'
         } md:block transition-all duration-300`}>
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            {sports.map((sport, index) => (
+            {(!loading ? sports : [
+              { name: 'All', count: '-' },
+              { name: 'Football', count: '-' },
+              { name: 'Basketball', count: '-' }
+            ]).map((sport, index) => (
               <button
                 key={sport.name}
                 onClick={() => handleSportClick(sport.name)}

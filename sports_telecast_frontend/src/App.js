@@ -14,47 +14,93 @@ function App() {
   const [viewerCount, setViewerCount] = useState(12847);
   const [isLoading, setIsLoading] = useState(true);
   const [theme] = useState('dark');
-  
-  const [currentMatch] = useState({
-    homeTeam: 'Arsenal',
-    awayTeam: 'Chelsea', 
-    homeScore: 2,
-    awayScore: 1,
-    status: 'LIVE',
-    time: "67'",
-    competition: 'Premier League'
-  });
+  const [currentMatch, setCurrentMatch] = useState(null);
+  const [matchLoading, setMatchLoading] = useState(false);
+  const [matchError, setMatchError] = useState(null);
 
-  // Simulate real-time viewer count updates with more realistic fluctuation
+  // Fetch current LIVE match, fallback to most recent if none
+  useEffect(() => {
+    setMatchLoading(true);
+    setMatchError(null);
+
+    const fetchCurrentMatch = async () => {
+      try {
+        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+        // Try fetching live matches and pick first, fallback to latest if none
+        let res = await fetch(`${apiUrl}/matches/live`);
+        let data = await res.json();
+        if (data.matches && data.matches.length > 0) {
+          const liveMatch = data.matches[0];
+          setCurrentMatch({
+            matchId: liveMatch.match_id,
+            homeTeam: liveMatch.home_team.name,
+            awayTeam: liveMatch.away_team.name,
+            homeScore: liveMatch.score?.home_score ?? 0,
+            awayScore: liveMatch.score?.away_score ?? 0,
+            status: (liveMatch.status || '').toUpperCase(),
+            time: liveMatch.start_time ? new Date(liveMatch.start_time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '',
+            competition: liveMatch.competition || liveMatch.sport_type || '',
+            streamUrl: liveMatch.stream_url,
+          });
+        } else {
+          // Fallback to latest match if no live
+          let allRes = await fetch(`${apiUrl}/matches/?page=1&page_size=1`);
+          let allData = await allRes.json();
+          if (allData.matches && allData.matches.length > 0) {
+            const match = allData.matches[0];
+            setCurrentMatch({
+              matchId: match.match_id,
+              homeTeam: match.home_team.name,
+              awayTeam: match.away_team.name,
+              homeScore: match.score?.home_score ?? 0,
+              awayScore: match.score?.away_score ?? 0,
+              status: (match.status || '').toUpperCase(),
+              time: match.start_time ? new Date(match.start_time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '',
+              competition: match.competition || match.sport_type || '',
+              streamUrl: match.stream_url,
+            });
+          }
+        }
+        setMatchLoading(false);
+      } catch (err) {
+        setMatchError('Failed to load current match');
+        setMatchLoading(false);
+      }
+    };
+
+    fetchCurrentMatch();
+  }, []);
+
+  // Simulate real-time viewer count updates
   useEffect(() => {
     const interval = setInterval(() => {
       setViewerCount(prev => {
         const change = Math.floor(Math.random() * 200) - 100; // -100 to +100
-        const newCount = Math.max(1000, prev + change); // Minimum 1000 viewers
+        const newCount = Math.max(1000, prev + change);
         return newCount;
       });
-    }, 3000); // Update every 3 seconds for more dynamic feel
-    
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
-  // Simulate app loading
+  // App loading screen (just for show, transition to loaded once match is ready)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-    
-    return () => clearTimeout(timer);
-  }, []);
+    if (matchLoading) {
+      setIsLoading(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 800); // Fast fade after match data
+      return () => clearTimeout(timer);
+    }
+  }, [matchLoading]);
 
-  // Handle sport change with smooth transition
   const handleSportChange = (sport) => {
     setSelectedSport(sport);
     // Add analytics tracking here if needed
     console.log(`Sport changed to: ${sport}`);
   };
 
-  // Loading Screen Component
   const LoadingScreen = () => (
     <div className="min-h-screen bg-primary-bg flex items-center justify-center">
       <div className="text-center space-y-6">
@@ -97,21 +143,18 @@ function App() {
       </div>
 
       {/* Header */}
-      <Header 
-        viewerCount={viewerCount}
-      />
+      <Header viewerCount={viewerCount} />
       
       {/* Main Content */}
       <div className="pt-16 relative z-10">
         {/* Sports Filter */}
-        <SportsFilter 
-          selectedSport={selectedSport}
-          onSportChange={handleSportChange}
-        />
+        <SportsFilter selectedSport={selectedSport} onSportChange={handleSportChange} />
         
         {/* Match Info Section */}
         <div className="max-w-7xl mx-auto p-4 sm:p-6 pt-0">
-          <MatchInfoSection currentMatch={currentMatch} />
+          {matchLoading && <div className="py-12 text-lg text-center text-text-secondary">Loading match info...</div>}
+          {matchError && <div className="p-4 bg-red-900/50 rounded text-red-300 mb-4">{matchError}</div>}
+          {currentMatch && <MatchInfoSection currentMatch={currentMatch} />}
         </div>
         
         {/* Main Layout Grid */}
@@ -120,10 +163,11 @@ function App() {
             {/* Main Video Area */}
             <div className="lg:col-span-8 space-y-6">
               <div className="slide-in-left">
-                <VideoPlayer currentMatch={currentMatch} />
+                {/* Pass currentMatch to VideoPlayer only when loaded */}
+                {currentMatch && <VideoPlayer currentMatch={currentMatch} />}
               </div>
               <div className="slide-in-left" style={{ animationDelay: '0.1s' }}>
-                <MatchSummary currentMatch={currentMatch} />
+                {currentMatch && <MatchSummary currentMatch={currentMatch} />}
               </div>
             </div>
             

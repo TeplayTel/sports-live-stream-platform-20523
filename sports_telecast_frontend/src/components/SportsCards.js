@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // PUBLIC_INTERFACE
 const SportsCards = ({ selectedSport, onSportChange }) => {
@@ -6,115 +6,68 @@ const SportsCards = ({ selectedSport, onSportChange }) => {
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('viewers');
   const [isLoading, setIsLoading] = useState(false);
-  
-  const matches = [
-    {
-      id: 1,
-      homeTeam: 'Liverpool',
-      awayTeam: 'Manchester City',
-      homeScore: 1,
-      awayScore: 1,
-      status: 'LIVE',
-      time: "73'",
-      competition: 'Premier League',
-      sport: 'Football',
-      viewers: 18500,
-      trending: true,
-      featured: true,
-      thumbnail: '/api/placeholder/400/225'
-    },
-    {
-      id: 2,
-      homeTeam: 'Barcelona',
-      awayTeam: 'Real Madrid',
-      homeScore: 2,
-      awayScore: 0,
-      status: 'LIVE',
-      time: "89'",
-      competition: 'La Liga',
-      sport: 'Football',
-      viewers: 25000,
-      trending: true,
-      featured: false,
-      thumbnail: '/api/placeholder/400/225'
-    },
-    {
-      id: 3,
-      homeTeam: 'Lakers',
-      awayTeam: 'Warriors',
-      homeScore: 108,
-      awayScore: 112,
-      status: 'FINAL',
-      time: 'FT',
-      competition: 'NBA',
-      sport: 'Basketball',
-      viewers: 0,
-      trending: false,
-      featured: false,
-      thumbnail: '/api/placeholder/400/225'
-    },
-    {
-      id: 4,
-      homeTeam: 'Federer',
-      awayTeam: 'Nadal',
-      homeScore: 2,
-      awayScore: 1,
-      status: 'RECORDED',
-      time: 'Highlights',
-      competition: 'Wimbledon',
-      sport: 'Tennis',
-      viewers: 0,
-      trending: false,
-      featured: true,
-      thumbnail: '/api/placeholder/400/225'
-    },
-    {
-      id: 5,
-      homeTeam: 'Yankees',
-      awayTeam: 'Red Sox',
-      homeScore: 7,
-      awayScore: 4,
-      status: 'FINAL',
-      time: '9th',
-      competition: 'MLB',
-      sport: 'Baseball',
-      viewers: 0,
-      trending: false,
-      featured: false,
-      thumbnail: '/api/placeholder/400/225'
-    },
-    {
-      id: 6,
-      homeTeam: 'Rangers',
-      awayTeam: 'Bruins',
-      homeScore: 3,
-      awayScore: 2,
-      status: 'LIVE',
-      time: '2nd Period',
-      competition: 'NHL',
-      sport: 'Hockey',
-      viewers: 8200,
-      trending: false,
-      featured: false,
-      thumbnail: '/api/placeholder/400/225'
-    }
-  ];
+  const [apiMatches, setApiMatches] = useState([]);
+  const [error, setError] = useState(null);
 
-  const filteredMatches = matches
-    .filter(match => {
-      const sportMatch = selectedSport === 'All' || match.sport === selectedSport;
-      const statusMatch = filter === 'All' || 
-        (filter === 'Live' && match.status === 'LIVE') ||
-        (filter === 'Recorded' && (match.status === 'RECORDED' || match.status === 'FINAL'));
-      
-      return sportMatch && statusMatch;
-    })
+  // Fetch matches from API based on filters/sport selection
+  useEffect(() => {
+    setIsLoading(true);
+    setError(null);
+
+    const fetchMatches = async () => {
+      try {
+        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+        let url = `${apiUrl}/matches/?page=1&page_size=30`;
+        const urlParams = [];
+        if (filter === 'Live') urlParams.push('status=live');
+        if (filter === 'Recorded') urlParams.push('status=finished');
+        if (selectedSport !== 'All')
+          urlParams.push('sport=' + encodeURIComponent(selectedSport.toLowerCase()));
+        if (urlParams.length > 0) url += '&' + urlParams.join('&');
+
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.matches && Array.isArray(data.matches)) {
+          setApiMatches(data.matches);
+        } else {
+          setApiMatches([]);
+        }
+      } catch (err) {
+        setError('Failed to load matches.');
+        setApiMatches([]);
+      }
+      setIsLoading(false);
+    };
+
+    fetchMatches();
+  }, [selectedSport, filter]);
+
+  // Provide normalization function to match required fields
+  // e.g., homeTeam, awayTeam, status, time, competition, etc.
+  const normalizedMatches = apiMatches.map((match) => ({
+    id: match.match_id,
+    homeTeam: match.home_team?.name ?? '',
+    awayTeam: match.away_team?.name ?? '',
+    homeScore: match.score?.home_score ?? 0,
+    awayScore: match.score?.away_score ?? 0,
+    status: (match.status || '').toUpperCase(),
+    time: match.start_time ? new Date(match.start_time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '',
+    competition: match.competition || match.sport_type || '',
+    sport: match.sport_type ? match.sport_type.charAt(0).toUpperCase() + match.sport_type.slice(1) : '',
+    viewers: Math.floor(Math.random() * 25000), // TODO: Replace with real viewers if API supports
+    trending: !!match.featured,
+    featured: !!match.featured,
+    thumbnail: match.home_team?.logo_url ?? '/api/placeholder/400/225'
+  }));
+
+  // Sort and filter according to UI
+  const sortedMatches = normalizedMatches
     .sort((a, b) => {
       switch (sortBy) {
         case 'viewers':
           return b.viewers - a.viewers;
         case 'time':
-          return new Date(b.id) - new Date(a.id);
+          return b.id.localeCompare(a.id);
         case 'alphabetical':
           return a.homeTeam.localeCompare(b.homeTeam);
         default:
@@ -123,9 +76,7 @@ const SportsCards = ({ selectedSport, onSportChange }) => {
     });
 
   const handleFilterChange = (newFilter) => {
-    setIsLoading(true);
     setFilter(newFilter);
-    setTimeout(() => setIsLoading(false), 300);
   };
 
   const getSportIcon = (sport) => {
@@ -150,6 +101,7 @@ const SportsCards = ({ selectedSport, onSportChange }) => {
           pulse: true
         };
       case 'FINAL': 
+      case 'FINISHED':
         return { 
           bg: 'bg-gray-600', 
           text: 'text-white',
@@ -312,7 +264,7 @@ const SportsCards = ({ selectedSport, onSportChange }) => {
             {selectedSport === 'All' ? 'All Sports' : selectedSport} Matches
           </h2>
           <p className="text-text-secondary">
-            {filteredMatches.length} matches found
+            {sortedMatches.length} matches found
           </p>
         </div>
         
@@ -390,14 +342,19 @@ const SportsCards = ({ selectedSport, onSportChange }) => {
         </div>
       )}
 
+      {/* API Error State */}
+      {error && (
+        <div className="p-4 bg-red-900/60 text-red-300 rounded scale-in">{error}</div>
+      )}
+
       {/* Matches Grid/List */}
-      {!isLoading && (
+      {!isLoading && !error && (
         <div className={`${
           viewMode === 'grid' 
             ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
             : 'space-y-4'
         }`}>
-          {filteredMatches.map((match, index) => (
+          {sortedMatches.map((match, index) => (
             <div key={match.id} className="scale-in">
               <MatchCard match={match} index={index} />
             </div>
@@ -406,7 +363,7 @@ const SportsCards = ({ selectedSport, onSportChange }) => {
       )}
 
       {/* No Results */}
-      {!isLoading && filteredMatches.length === 0 && (
+      {!isLoading && !error && sortedMatches.length === 0 && (
         <div className="text-center py-16 scale-in">
           <div className="text-6xl mb-4">🏟️</div>
           <h3 className="text-xl font-bold text-text-primary mb-2">No matches found</h3>
