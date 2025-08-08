@@ -16,15 +16,25 @@ class EmojiService {
   }
 
   // Get authorization headers
-  getHeaders() {
+  getHeaders(userId = null, username = null) {
+    // Try to use window.mockUser if available, else parameters
+    let mockUserId = userId, mockUsername = username;
+    if ((!mockUserId || !mockUsername) && typeof window !== 'undefined' && window.mockUser) {
+      const user = window.mockUser;
+      if (!mockUserId && user && user.user_id) mockUserId = user.user_id;
+      if (!mockUsername && user && user.username) mockUsername = user.username;
+    }
+    if (!mockUserId) mockUserId = 'mock-user-001';
+    if (!mockUsername) mockUsername = 'mockfan';
+
     const headers = {
       'Content-Type': 'application/json',
+      'X-Mock-User-Id': mockUserId,
+      'X-Mock-Username': mockUsername,
     };
-    
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
-    
     return headers;
   }
 
@@ -64,19 +74,37 @@ class EmojiService {
    * Submit an emoji reaction for a live event
    * @param {string} eventId - Event identifier
    * @param {string} emojiId - Emoji identifier
+   * @param {string} userId - Mock user identifier (optional; if not supplied will use default)
+   * @param {object} userData - Mock user data (optional)
    * @returns {Promise<Object>} Reaction response
    */
-  async submitReaction(eventId, emojiId) {
+  async submitReaction(eventId, emojiId, userId = null, userData = null) {
     try {
+      // Try to use window.mockUser or pass userId/userData if provided (so that context-integrated APIs work)
+      let mockUserId = userId;
+      let mockUser = userData;
+      // Check if window.mockUser is available (from React context integration via a global, see App.js usage below)
+      if (!mockUserId && typeof window !== 'undefined' && window.mockUser && window.mockUser.user_id) {
+        mockUserId = window.mockUser.user_id;
+        mockUser = window.mockUser;
+      }
+      if (!mockUserId) mockUserId = 'mock-user-001';
+
       const url = `${this.apiUrl}/fan-engagement/emoji/v1/userEmojiReaction`;
+      const body = {
+        event_id: eventId,
+        emoji_id: emojiId,
+        created_at: new Date().toISOString(),
+        user_id: mockUserId, // Add mock userId property for all POSTs
+        user_data: mockUser, // Optionally include userData for backend debug/development
+      };
+
+      // Remove undefined/nulls
+      Object.keys(body).forEach(key => (body[key] == null) && delete body[key]);
       const response = await fetch(url, {
         method: 'POST',
         headers: this.getHeaders(),
-        body: JSON.stringify({
-          event_id: eventId,
-          emoji_id: emojiId,
-          created_at: new Date().toISOString()
-        }),
+        body: JSON.stringify(body),
       });
       
       return await this.handleResponse(response);

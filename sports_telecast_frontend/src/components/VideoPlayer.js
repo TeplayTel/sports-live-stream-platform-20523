@@ -3,13 +3,17 @@ import ReactPlayer from 'react-player';
 import emojiService from '../services/emojiService';
 import websocketService from '../services/websocketService';
 
+import { useUser, MOCK_USER } from '../UserContext';
+
 // PUBLIC_INTERFACE
-const VideoPlayer = ({ currentMatch }) => {
+const VideoPlayer = ({ currentMatch, user: propUser }) => {
   /**
    * Enhanced video player component with ReactPlayer, premium emoji reactions, sound effects, and natural flying animations
    * Features sleek glassmorphism design, smooth animations, distinct sounds per emoji, and improved user experience
    * Integrates with backend API and WebSocket for real-time reactions
    */
+  // Always call useUser() at the top of the function component
+  const { user: contextUser } = useUser();
   const playerRef = useRef(null);
   const containerRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -431,12 +435,19 @@ const VideoPlayer = ({ currentMatch }) => {
       navigator.vibrate([50, 30, 50]);
     }
 
+    const effectiveUser = propUser || contextUser || MOCK_USER;
+
     try {
       setReactionError(null);
       if (!currentMatch?.matchId) {
         throw new Error('No event ID available');
       }
-      await emojiService.submitReaction(currentMatch.matchId, emojiData.emoji_id);
+      await emojiService.submitReaction(
+        currentMatch.matchId,
+        emojiData.emoji_id,
+        effectiveUser?.user_id,
+        effectiveUser
+      );
       // The WebSocket will handle the real-time update, do nothing further here.
     } catch (error) {
       setReactionError(`Failed to submit ${emojiData.name} reaction`);
@@ -447,7 +458,7 @@ const VideoPlayer = ({ currentMatch }) => {
       setGlobalReactionCount(prev => Math.max(0, prev - 1));
       setTimeout(() => setReactionError(null), 3000);
     }
-  }, [initializeAudio, playEmojiSound, currentMatch?.matchId]);
+  }, [initializeAudio, playEmojiSound, currentMatch?.matchId, propUser, contextUser]);
 
   // ReactPlayer controls
   const togglePlayPause = () => setIsPlaying(!isPlaying);

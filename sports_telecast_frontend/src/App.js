@@ -4,12 +4,21 @@ import VideoPlayer from './components/VideoPlayer';
 import AnalyticsPanel from './components/AnalyticsPanel';
 import MatchInfoSection from './components/MatchInfoSection';
 import './App.css';
+import { useUser, MOCK_USER } from './UserContext';
 
 // PUBLIC_INTERFACE
 function App() {
   const [viewerCount, setViewerCount] = useState(12847);
   const [isLoading, setIsLoading] = useState(true);
   const [theme] = useState('dark');
+
+  // Attach global window.mockUser for API services
+  const { user } = useUser(); // always call hooks unconditionally
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.mockUser = user || MOCK_USER;
+    }
+  }, [user]);
 
   // Simulate real-time viewer count updates
   useEffect(() => {
@@ -84,13 +93,16 @@ function App() {
             {/* Main Video Area */}
             <div className="lg:col-span-8 space-y-6">
               <div className="slide-in-left">
-                <VideoPlayer currentMatch={{
-                  matchId: "123",
-                  homeTeam: 'Arsenal', homeScore: 2, awayTeam: 'Chelsea', awayScore: 1,
-                  status: 'LIVE', time: "67'", competition: 'Premier League',
-                  homeLogo: "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
-                  awayLogo: "https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg"
-                }} />
+                <VideoPlayer
+                  currentMatch={{
+                    matchId: "123",
+                    homeTeam: 'Arsenal', homeScore: 2, awayTeam: 'Chelsea', awayScore: 1,
+                    status: 'LIVE', time: "67'", competition: 'Premier League',
+                    homeLogo: "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
+                    awayLogo: "https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg"
+                  }}
+                  user={user}
+                />
                 {/* Premium compact MatchInfoSection: Netflix-inspired */}
                 <MatchInfoSection match={{
                   homeTeam: 'Arsenal',
