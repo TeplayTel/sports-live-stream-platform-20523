@@ -9,56 +9,188 @@ const SportsCards = ({ selectedSport, onSportChange }) => {
   const [apiMatches, setApiMatches] = useState([]);
   const [error, setError] = useState(null);
 
-  // Fetch matches from API based on filters/sport selection
+  // Static mock data for matches - comprehensive dataset
+  const mockMatches = [
+    {
+      id: 'match_001',
+      homeTeam: 'Arsenal',
+      awayTeam: 'Chelsea',
+      homeScore: 2,
+      awayScore: 1,
+      status: 'LIVE',
+      time: '67:45',
+      competition: 'Premier League',
+      sport: 'Football',
+      viewers: 24567,
+      trending: true,
+      featured: true,
+      thumbnail: '/api/placeholder/400/225'
+    },
+    {
+      id: 'match_002',
+      homeTeam: 'Manchester City',
+      awayTeam: 'Liverpool',
+      homeScore: 1,
+      awayScore: 1,
+      status: 'LIVE',
+      time: '88:20',
+      competition: 'Premier League',
+      sport: 'Football',
+      viewers: 31245,
+      trending: true,
+      featured: false,
+      thumbnail: '/api/placeholder/400/225'
+    },
+    {
+      id: 'match_003',
+      homeTeam: 'Lakers',
+      awayTeam: 'Warriors',
+      homeScore: 108,
+      awayScore: 112,
+      status: 'FINISHED',
+      time: 'Final',
+      competition: 'NBA',
+      sport: 'Basketball',
+      viewers: 18934,
+      trending: false,
+      featured: false,
+      thumbnail: '/api/placeholder/400/225'
+    },
+    {
+      id: 'match_004',
+      homeTeam: 'Novak Djokovic',
+      awayTeam: 'Rafael Nadal',
+      homeScore: 2,
+      awayScore: 1,
+      status: 'LIVE',
+      time: 'Set 4',
+      competition: 'Roland Garros',
+      sport: 'Tennis',
+      viewers: 15678,
+      trending: true,
+      featured: true,
+      thumbnail: '/api/placeholder/400/225'
+    },
+    {
+      id: 'match_005',
+      homeTeam: 'Yankees',
+      awayTeam: 'Red Sox',
+      homeScore: 7,
+      awayScore: 4,
+      status: 'LIVE',
+      time: '8th Inning',
+      competition: 'MLB',
+      sport: 'Baseball',
+      viewers: 12456,
+      trending: false,
+      featured: false,
+      thumbnail: '/api/placeholder/400/225'
+    },
+    {
+      id: 'match_006',
+      homeTeam: 'Bruins',
+      awayTeam: 'Rangers',
+      homeScore: 3,
+      awayScore: 2,
+      status: 'FINISHED',
+      time: 'Final OT',
+      competition: 'NHL',
+      sport: 'Hockey',
+      viewers: 9834,
+      trending: false,
+      featured: false,
+      thumbnail: '/api/placeholder/400/225'
+    },
+    {
+      id: 'match_007',
+      homeTeam: 'India',
+      awayTeam: 'Australia',
+      homeScore: 245,
+      awayScore: 189,
+      status: 'LIVE',
+      time: 'Day 3',
+      competition: 'Test Series',
+      sport: 'Cricket',
+      viewers: 22341,
+      trending: true,
+      featured: false,
+      thumbnail: '/api/placeholder/400/225'
+    },
+    {
+      id: 'match_008',
+      homeTeam: 'Real Madrid',
+      awayTeam: 'Barcelona',
+      homeScore: 0,
+      awayScore: 0,
+      status: 'SCHEDULED',
+      time: '20:00',
+      competition: 'La Liga',
+      sport: 'Football',
+      viewers: 0,
+      trending: true,
+      featured: true,
+      thumbnail: '/api/placeholder/400/225'
+    },
+    {
+      id: 'match_009',
+      homeTeam: 'Celtics',
+      awayTeam: 'Heat',
+      homeScore: 95,
+      awayScore: 87,
+      status: 'FINISHED',
+      time: 'Final',
+      competition: 'NBA',
+      sport: 'Basketball',
+      viewers: 16789,
+      trending: false,
+      featured: false,
+      thumbnail: '/api/placeholder/400/225'
+    },
+    {
+      id: 'match_010',
+      homeTeam: 'Serena Williams',
+      awayTeam: 'Venus Williams',
+      homeScore: 1,
+      awayScore: 2,
+      status: 'FINISHED',
+      time: 'Final',
+      competition: 'Wimbledon',
+      sport: 'Tennis',
+      viewers: 14523,
+      trending: false,
+      featured: false,
+      thumbnail: '/api/placeholder/400/225'
+    }
+  ];
+
+  // Filter matches based on selected sport and filter
   useEffect(() => {
     setIsLoading(true);
     setError(null);
 
-    const fetchMatches = async () => {
-      try {
-        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-        let url = `${apiUrl}/matches/?page=1&page_size=30`;
-        const urlParams = [];
-        if (filter === 'Live') urlParams.push('status=live');
-        if (filter === 'Recorded') urlParams.push('status=finished');
-        if (selectedSport !== 'All')
-          urlParams.push('sport=' + encodeURIComponent(selectedSport.toLowerCase()));
-        if (urlParams.length > 0) url += '&' + urlParams.join('&');
+    // Simulate API loading delay
+    setTimeout(() => {
+      let filteredMatches = [...mockMatches];
 
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.matches && Array.isArray(data.matches)) {
-          setApiMatches(data.matches);
-        } else {
-          setApiMatches([]);
-        }
-      } catch (err) {
-        setError('Failed to load matches.');
-        setApiMatches([]);
+      // Filter by sport
+      if (selectedSport !== 'All') {
+        filteredMatches = filteredMatches.filter(match => match.sport === selectedSport);
       }
-      setIsLoading(false);
-    };
 
-    fetchMatches();
+      // Filter by status
+      if (filter === 'Live') {
+        filteredMatches = filteredMatches.filter(match => match.status === 'LIVE');
+      } else if (filter === 'Recorded') {
+        filteredMatches = filteredMatches.filter(match => match.status === 'FINISHED');
+      }
+
+      setApiMatches(filteredMatches);
+      setIsLoading(false);
+    }, 300); // Simulate network delay
   }, [selectedSport, filter]);
 
-  // Provide normalization function to match required fields
-  // e.g., homeTeam, awayTeam, status, time, competition, etc.
-  const normalizedMatches = apiMatches.map((match) => ({
-    id: match.match_id,
-    homeTeam: match.home_team?.name ?? '',
-    awayTeam: match.away_team?.name ?? '',
-    homeScore: match.score?.home_score ?? 0,
-    awayScore: match.score?.away_score ?? 0,
-    status: (match.status || '').toUpperCase(),
-    time: match.start_time ? new Date(match.start_time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '',
-    competition: match.competition || match.sport_type || '',
-    sport: match.sport_type ? match.sport_type.charAt(0).toUpperCase() + match.sport_type.slice(1) : '',
-    viewers: Math.floor(Math.random() * 25000), // TODO: Replace with real viewers if API supports
-    trending: !!match.featured,
-    featured: !!match.featured,
-    thumbnail: match.home_team?.logo_url ?? '/api/placeholder/400/225'
-  }));
+  // Use filtered matches directly since they're already normalized
+  const normalizedMatches = apiMatches;
 
   // Sort and filter according to UI
   const sortedMatches = normalizedMatches

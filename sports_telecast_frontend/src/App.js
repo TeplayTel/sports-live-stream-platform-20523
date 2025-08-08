@@ -18,57 +18,28 @@ function App() {
   const [matchLoading, setMatchLoading] = useState(false);
   const [matchError, setMatchError] = useState(null);
 
-  // Fetch current LIVE match, fallback to most recent if none
+  // Static mock data for current match
+  const mockCurrentMatch = {
+    matchId: 'live_match_001',
+    homeTeam: 'Arsenal',
+    awayTeam: 'Chelsea',
+    homeScore: 2,
+    awayScore: 1,
+    status: 'LIVE',
+    time: '67:45',
+    competition: 'Premier League',
+    streamUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+  };
+
+  // Load current match with simulated delay
   useEffect(() => {
     setMatchLoading(true);
     setMatchError(null);
 
-    const fetchCurrentMatch = async () => {
-      try {
-        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-        // Try fetching live matches and pick first, fallback to latest if none
-        let res = await fetch(`${apiUrl}/matches/live`);
-        let data = await res.json();
-        if (data.matches && data.matches.length > 0) {
-          const liveMatch = data.matches[0];
-          setCurrentMatch({
-            matchId: liveMatch.match_id,
-            homeTeam: liveMatch.home_team.name,
-            awayTeam: liveMatch.away_team.name,
-            homeScore: liveMatch.score?.home_score ?? 0,
-            awayScore: liveMatch.score?.away_score ?? 0,
-            status: (liveMatch.status || '').toUpperCase(),
-            time: liveMatch.start_time ? new Date(liveMatch.start_time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '',
-            competition: liveMatch.competition || liveMatch.sport_type || '',
-            streamUrl: liveMatch.stream_url,
-          });
-        } else {
-          // Fallback to latest match if no live
-          let allRes = await fetch(`${apiUrl}/matches/?page=1&page_size=1`);
-          let allData = await allRes.json();
-          if (allData.matches && allData.matches.length > 0) {
-            const match = allData.matches[0];
-            setCurrentMatch({
-              matchId: match.match_id,
-              homeTeam: match.home_team.name,
-              awayTeam: match.away_team.name,
-              homeScore: match.score?.home_score ?? 0,
-              awayScore: match.score?.away_score ?? 0,
-              status: (match.status || '').toUpperCase(),
-              time: match.start_time ? new Date(match.start_time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '',
-              competition: match.competition || match.sport_type || '',
-              streamUrl: match.stream_url,
-            });
-          }
-        }
-        setMatchLoading(false);
-      } catch (err) {
-        setMatchError('Failed to load current match');
-        setMatchLoading(false);
-      }
-    };
-
-    fetchCurrentMatch();
+    setTimeout(() => {
+      setCurrentMatch(mockCurrentMatch);
+      setMatchLoading(false);
+    }, 600); // Simulate network delay
   }, []);
 
   // Simulate real-time viewer count updates

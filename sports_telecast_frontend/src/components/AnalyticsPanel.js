@@ -20,89 +20,80 @@ const AnalyticsPanel = () => {
     { id: 4, user: 'PremierFan', message: 'Arsenal looking strong today', time: '7m', avatar: '🏆' }
   ]);
 
-  // Fetch stats from the backend (simulate: pick a live match and display some stats)
+  // Static mock data for match statistics
+  const mockStats = [
+    { label: 'Possession', home: 58, away: 42, homeDisplay: '58%', awayDisplay: '42%' },
+    { label: 'Shots', home: 14, away: 9, homeDisplay: '14', awayDisplay: '9' },
+    { label: 'On Target', home: 7, away: 4, homeDisplay: '7', awayDisplay: '4' },
+    { label: 'Corners', home: 8, away: 5, homeDisplay: '8', awayDisplay: '5' },
+    { label: 'Fouls', home: 12, away: 8, homeDisplay: '12', awayDisplay: '8' },
+    { label: 'Yellow Cards', home: 3, away: 1, homeDisplay: '3', awayDisplay: '1' }
+  ];
+
+  // Load stats with simulated delay
   useEffect(() => {
     setLoadingStats(true);
     setStatsError(null);
 
-    const fetchStats = async () => {
-      try {
-        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-        // Try to get one live match and display its statistics if available
-        let res = await fetch(`${apiUrl}/matches/live`);
-        let data = await res.json();
-        if (data.matches && data.matches.length > 0 && data.matches[0].statistics) {
-          let statObj = data.matches[0].statistics;
-          // Normalize: create display array from statistics object if available
-          const statLabels = [
-            { key: 'possession', label: 'Possession', percent: true },
-            { key: 'shots', label: 'Shots', percent: false },
-            { key: 'on_target', label: 'On Target', percent: false },
-            { key: 'corners', label: 'Corners', percent: false },
-            { key: 'fouls', label: 'Fouls', percent: false },
-            { key: 'yellow_cards', label: 'Yellow Cards', percent: false },
-          ];
-          const arr = statLabels.map(s => ({
-            label: s.label,
-            home: statObj?.home?.[s.key] ?? 0,
-            away: statObj?.away?.[s.key] ?? 0,
-            homeDisplay: s.percent ? `${statObj?.home?.[s.key] ?? 0}%` : `${statObj?.home?.[s.key] ?? 0}`,
-            awayDisplay: s.percent ? `${statObj?.away?.[s.key] ?? 0}%` : `${statObj?.away?.[s.key] ?? 0}`
-          }));
-          setStats(arr);
-        } else {
-          // Fallback demo
-          setStats([
-            { label: 'Possession', home: 58, away: 42, homeDisplay: '58%', awayDisplay: '42%' },
-            { label: 'Shots', home: 12, away: 8, homeDisplay: '12', awayDisplay: '8' },
-            { label: 'On Target', home: 6, away: 3, homeDisplay: '6', awayDisplay: '3' },
-            { label: 'Corners', home: 7, away: 4, homeDisplay: '7', awayDisplay: '4' },
-            { label: 'Fouls', home: 11, away: 9, homeDisplay: '11', awayDisplay: '9' },
-            { label: 'Yellow Cards', home: 2, away: 1, homeDisplay: '2', awayDisplay: '1' }
-          ]);
-        }
-        setLoadingStats(false);
-      } catch (err) {
-        setStatsError('Failed to load match statistics.');
-        setStats([]);
-        setLoadingStats(false);
-      }
-    };
-    fetchStats();
+    setTimeout(() => {
+      setStats(mockStats);
+      setLoadingStats(false);
+    }, 500); // Simulate network delay
   }, []);
 
-  // Fetch upcoming matches (schedules)
+  // Static mock data for upcoming matches
+  const mockUpcomingMatches = [
+    {
+      match_id: 'upcoming_001',
+      home_team: { name: 'Manchester United' },
+      away_team: { name: 'Tottenham' },
+      start_time: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
+      competition: 'Premier League',
+      sport_type: 'football'
+    },
+    {
+      match_id: 'upcoming_002',
+      home_team: { name: 'Bucks' },
+      away_team: { name: 'Nets' },
+      start_time: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), // 4 hours from now
+      competition: 'NBA',
+      sport_type: 'basketball'
+    },
+    {
+      match_id: 'upcoming_003',
+      home_team: { name: 'Roger Federer' },
+      away_team: { name: 'Andy Murray' },
+      start_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+      competition: 'ATP Masters',
+      sport_type: 'tennis'
+    },
+    {
+      match_id: 'upcoming_004',
+      home_team: { name: 'Dodgers' },
+      away_team: { name: 'Giants' },
+      start_time: new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString(), // Tomorrow
+      competition: 'MLB',
+      sport_type: 'baseball'
+    },
+    {
+      match_id: 'upcoming_005',
+      home_team: { name: 'England' },
+      away_team: { name: 'South Africa' },
+      start_time: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(), // Day after tomorrow
+      competition: 'Test Series',
+      sport_type: 'cricket'
+    }
+  ];
+
+  // Load upcoming matches with simulated delay
   useEffect(() => {
     setLoadingUpcoming(true);
     setUpcomingError(null);
-    const fetchUpcoming = async () => {
-      try {
-        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-        let url = `${apiUrl}/matches/schedule/upcoming`;
-        let res = await fetch(url);
-        let data = await res.json();
-        if (data.matches && Array.isArray(data.matches)) {
-          setUpcomingMatches(data.matches.slice(0, 5)); // show only top 5 for panel
-        } else if (data.daily_schedules && Array.isArray(data.daily_schedules)) {
-          // API may return weekly block
-          const upcoming = [];
-          for (const ds of data.daily_schedules) {
-            if (Array.isArray(ds.matches)) {
-              upcoming.push(...ds.matches.map((m) => m));
-            }
-          }
-          setUpcomingMatches(upcoming.slice(0, 5));
-        } else {
-          setUpcomingMatches([]);
-        }
-        setLoadingUpcoming(false);
-      } catch (err) {
-        setUpcomingError('Failed to load upcoming matches.');
-        setUpcomingMatches([]);
-        setLoadingUpcoming(false);
-      }
-    };
-    fetchUpcoming();
+    
+    setTimeout(() => {
+      setUpcomingMatches(mockUpcomingMatches.slice(0, 5));
+      setLoadingUpcoming(false);
+    }, 400); // Simulate network delay
   }, []);
 
   const handleSendMessage = () => {

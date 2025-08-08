@@ -8,53 +8,25 @@ const SportsFilter = ({ selectedSport, onSportChange }) => {
   ]);
   const [loading, setLoading] = useState(true);
 
-  // Attempt to get sports dynamically from API
+  // Static mock data for sports with realistic counts
+  const mockSports = [
+    { name: 'All', count: 47 },
+    { name: 'Football', count: 18 },
+    { name: 'Basketball', count: 12 },
+    { name: 'Tennis', count: 8 },
+    { name: 'Baseball', count: 5 },
+    { name: 'Hockey', count: 3 },
+    { name: 'Cricket', count: 1 }
+  ];
+
+  // Load sports data with simulated delay
   useEffect(() => {
     setLoading(true);
-    const fetchSports = async () => {
-      try {
-        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-        // Fetch all matches, get unique sport types and counts
-        let res = await fetch(`${apiUrl}/matches/`);
-        let data = await res.json();
-        if (data.matches && Array.isArray(data.matches)) {
-          const sportsMap = {};
-          data.matches.forEach((match) => {
-            if (match.sport_type) {
-              const sport = match.sport_type.charAt(0).toUpperCase() + match.sport_type.slice(1);
-              sportsMap[sport] = (sportsMap[sport] || 0) + 1;
-            }
-          });
-          // Fallback static order if no data
-          let arr = [{ name: 'All', count: data.matches.length }];
-          Object.keys(sportsMap).forEach(k => arr.push({ name: k, count: sportsMap[k] }));
-          setSports(arr);
-        } else {
-          setSports([
-            { name: 'All', count: 0 },
-            { name: 'Football', count: 0 },
-            { name: 'Basketball', count: 0 },
-            { name: 'Tennis', count: 0 },
-            { name: 'Baseball', count: 0 },
-            { name: 'Hockey', count: 0 },
-            { name: 'Cricket', count: 0 }
-          ]);
-        }
-      } catch (e) {
-        // fallback to static
-        setSports([
-          { name: 'All', count: 0 },
-          { name: 'Football', count: 0 },
-          { name: 'Basketball', count: 0 },
-          { name: 'Tennis', count: 0 },
-          { name: 'Baseball', count: 0 },
-          { name: 'Hockey', count: 0 },
-          { name: 'Cricket', count: 0 }
-        ]);
-      }
+    
+    setTimeout(() => {
+      setSports(mockSports);
       setLoading(false);
-    };
-    fetchSports();
+    }, 200); // Simulate network delay
   }, []);
 
   const handleSportClick = (sportName) => {
