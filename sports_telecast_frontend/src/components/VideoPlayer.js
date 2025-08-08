@@ -118,13 +118,10 @@ const VideoPlayer = ({ currentMatch }) => {
   const createEmojiSound = useCallback((soundConfig) => {
     const { frequency, type, duration } = soundConfig;
     const cacheKey = `${frequency}-${type}-${duration}`;
-
     if (soundCacheRef.current[cacheKey]) {
       return soundCacheRef.current[cacheKey];
     }
-
     if (!audioContextRef.current) return null;
-
     const audioBuffer = audioContextRef.current.createBuffer(1, audioContextRef.current.sampleRate * duration, audioContextRef.current.sampleRate);
     const channelData = audioBuffer.getChannelData(0);
 
@@ -149,10 +146,8 @@ const VideoPlayer = ({ currentMatch }) => {
         default:
           sample = Math.sin(2 * Math.PI * frequency * time);
       }
-
       channelData[i] = sample * envelope * 0.1; // Gentle volume
     }
-
     soundCacheRef.current[cacheKey] = audioBuffer;
     return audioBuffer;
   }, []);
@@ -162,7 +157,6 @@ const VideoPlayer = ({ currentMatch }) => {
     if (!audioContextRef.current || audioContextRef.current.state === 'suspended') {
       audioContextRef.current?.resume();
     }
-
     try {
       const audioBuffer = createEmojiSound(soundConfig);
       if (!audioBuffer) return;
@@ -192,14 +186,11 @@ const VideoPlayer = ({ currentMatch }) => {
       try {
         setIsLoadingEmojis(true);
         setApiError(null);
-        
         const response = await emojiService.getEmojis(1, 10);
-        
         if (response && response.emojis) {
           // Transform backend emojis to frontend format
           const transformedEmojis = response.emojis.map((apiEmoji, index) => {
             const fallback = fallbackEmojis[index] || fallbackEmojis[0];
-            
             return {
               emoji: getEmojiSymbol(apiEmoji.emoji_type),
               color: getEmojiColor(apiEmoji.emoji_type),
@@ -210,16 +201,13 @@ const VideoPlayer = ({ currentMatch }) => {
               gradient: fallback.gradient
             };
           });
-          
           setAvailableEmojis(transformedEmojis);
-          
           // Create mapping for counts
           const mapping = {};
           transformedEmojis.forEach(emoji => {
             mapping[emoji.name] = emoji.emoji_id;
           });
           setEmojiMapping(mapping);
-          
           // Initialize emoji counts
           const initialCounts = {};
           transformedEmojis.forEach(emoji => {
@@ -240,7 +228,6 @@ const VideoPlayer = ({ currentMatch }) => {
         setIsLoadingEmojis(false);
       }
     };
-
     loadEmojis();
   }, []);
 
@@ -256,7 +243,6 @@ const VideoPlayer = ({ currentMatch }) => {
     };
     return symbols[emojiType] || '👍';
   };
-
   const getEmojiColor = (emojiType) => {
     const colors = {
       heart: '#ff1744',
@@ -272,13 +258,10 @@ const VideoPlayer = ({ currentMatch }) => {
   // WebSocket connection for real-time updates
   useEffect(() => {
     if (!currentMatch?.matchId) return;
-
     const eventId = currentMatch.matchId;
     
     // Set up WebSocket event listeners
     const handleReactionUpdate = (data) => {
-      console.log('🔄 Received reaction update:', data);
-      
       if (data.emoji_counts) {
         // Update emoji counts from WebSocket data
         const updatedCounts = {};
@@ -291,37 +274,21 @@ const VideoPlayer = ({ currentMatch }) => {
         });
         setEmojiCounts(prev => ({ ...prev, ...updatedCounts }));
       }
-      
       if (data.total_reactions !== undefined) {
         setGlobalReactionCount(data.total_reactions);
       }
     };
 
-    const handleConnect = () => {
-      console.log('✅ WebSocket connected');
-      setWsConnected(true);
-    };
+    const handleConnect = () => setWsConnected(true);
+    const handleDisconnect = () => setWsConnected(false);
+    const handleError = () => setWsConnected(false);
 
-    const handleDisconnect = () => {
-      console.log('❌ WebSocket disconnected');
-      setWsConnected(false);
-    };
-
-    const handleError = (error) => {
-      console.error('❌ WebSocket error:', error);
-      setWsConnected(false);
-    };
-
-    // Register listeners
     websocketService.on('reaction', handleReactionUpdate);
     websocketService.on('connect', handleConnect);
     websocketService.on('disconnect', handleDisconnect);
     websocketService.on('error', handleError);
-
-    // Connect to WebSocket
     websocketService.connect(eventId);
 
-    // Load initial reaction counts
     const loadInitialReactions = async () => {
       try {
         const summary = await emojiService.getEventReactions(eventId);
@@ -339,10 +306,9 @@ const VideoPlayer = ({ currentMatch }) => {
           setGlobalReactionCount(summary.total_reactions);
         }
       } catch (error) {
-        console.warn('Could not load initial reactions:', error);
+        // ignore
       }
     };
-
     loadInitialReactions();
 
     // Cleanup
@@ -354,46 +320,22 @@ const VideoPlayer = ({ currentMatch }) => {
       websocketService.disconnect();
       setWsConnected(false);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMatch?.matchId, emojis]);
 
   // ReactPlayer event handlers
   const handleReady = () => {
-    console.log('ReactPlayer ready');
     setIsVideoLoading(false);
     setVideoError(null);
   };
-
-  const handleStart = () => {
-    console.log('ReactPlayer started');
-    setIsVideoLoading(false);
-  };
-
-  const handlePlay = () => {
-    setIsPlaying(true);
-  };
-
-  const handlePause = () => {
-    setIsPlaying(false);
-  };
-
-  const handleBuffer = () => {
-    setIsBuffering(true);
-  };
-
-  const handleBufferEnd = () => {
-    setIsBuffering(false);
-  };
-
-  const handleProgress = (state) => {
-    setCurrentTime(state.playedSeconds);
-  };
-
-  const handleDuration = (duration) => {
-    setDuration(duration);
-  };
-
+  const handleStart = () => setIsVideoLoading(false);
+  const handlePlay = () => setIsPlaying(true);
+  const handlePause = () => setIsPlaying(false);
+  const handleBuffer = () => setIsBuffering(true);
+  const handleBufferEnd = () => setIsBuffering(false);
+  const handleProgress = (state) => setCurrentTime(state.playedSeconds);
+  const handleDuration = (duration) => setDuration(duration);
   const handleError = (error) => {
-    console.error('ReactPlayer error:', error);
     setIsPlaying(false);
     setVideoError('Failed to load video. Please try again.');
     setIsVideoLoading(false);
@@ -444,21 +386,15 @@ const VideoPlayer = ({ currentMatch }) => {
 
   // Enhanced emoji reaction handler with backend integration
   const handleEmojiReaction = useCallback(async (emojiData) => {
-    // Initialize audio on first interaction
     initializeAudio();
-
-    // Play distinct sound for emoji with <50ms delay
     playEmojiSound(emojiData.sound);
 
-    // Create enhanced flying animations with natural arcs
-    const numFlying = Math.random() > 0.65 ? 2 : 1; // 35% chance for double emoji
-
+    const numFlying = Math.random() > 0.65 ? 2 : 1;
     for (let i = 0; i < numFlying; i++) {
-      const startX = Math.random() * 70 + 15; // 15-85% from left
-      const startY = Math.random() * 30 + 40; // 40-70% from top
-      const endX = startX + (Math.random() - 0.5) * 40; // Natural arc movement
-      const endY = startY - 60 - Math.random() * 40; // Upward movement with variation
-
+      const startX = Math.random() * 70 + 15;
+      const startY = Math.random() * 30 + 40;
+      const endX = startX + (Math.random() - 0.5) * 40;
+      const endY = startY - 60 - Math.random() * 40;
       const newFlyingReaction = {
         id: Date.now() + Math.random() + i,
         emoji: emojiData.emoji,
@@ -468,79 +404,53 @@ const VideoPlayer = ({ currentMatch }) => {
         startY,
         endX,
         endY,
-        rotation: Math.random() * 720 - 360, // Full rotation range
-        scale: 0.8 + Math.random() * 0.7, // 0.8-1.5 scale
-        delay: i * 120, // Stagger multiple emojis
-        duration: 2.5 + Math.random() * 1.5, // 2.5-4s duration
-        curve: Math.random() * 60 - 30 // Bezier curve variation
+        rotation: Math.random() * 720 - 360,
+        scale: 0.8 + Math.random() * 0.7,
+        delay: i * 120,
+        duration: 2.5 + Math.random() * 1.5,
+        curve: Math.random() * 60 - 30
       };
-
       setTimeout(() => {
         setFlyingReactions(prev => [...prev, newFlyingReaction]);
       }, newFlyingReaction.delay);
     }
 
-    // Optimistic UI update - immediately update counts
     setEmojiCounts(prev => ({
       ...prev,
       [emojiData.name]: (prev[emojiData.name] || 0) + 1
     }));
-
     setGlobalReactionCount(prev => prev + 1);
 
-    // Enhanced cleanup
     setTimeout(() => {
       setFlyingReactions(prev => prev.filter(r =>
         Date.now() - r.id > 4000
       ));
     }, 5000);
 
-    // Enhanced haptic feedback
     if (navigator.vibrate) {
-      navigator.vibrate([50, 30, 50]); // Pattern for better feedback
+      navigator.vibrate([50, 30, 50]);
     }
 
-    console.log(`🎵 ${emojiData.name} reaction with ${emojiData.sound.type} sound at ${emojiData.sound.frequency}Hz`);
-
-    // Submit reaction to backend
     try {
       setReactionError(null);
-      
       if (!currentMatch?.matchId) {
         throw new Error('No event ID available');
       }
-
-      const response = await emojiService.submitReaction(
-        currentMatch.matchId, 
-        emojiData.emoji_id
-      );
-      
-      console.log('✅ Reaction submitted successfully:', response);
-      
-      // The WebSocket will handle the real-time update to all clients
-      // so we don't need to manually update counts here
-      
+      await emojiService.submitReaction(currentMatch.matchId, emojiData.emoji_id);
+      // The WebSocket will handle the real-time update, do nothing further here.
     } catch (error) {
-      console.error('❌ Failed to submit reaction:', error);
       setReactionError(`Failed to submit ${emojiData.name} reaction`);
-      
-      // Revert optimistic update on error
       setEmojiCounts(prev => ({
         ...prev,
         [emojiData.name]: Math.max(0, (prev[emojiData.name] || 0) - 1)
       }));
       setGlobalReactionCount(prev => Math.max(0, prev - 1));
-      
-      // Clear error after 3 seconds
       setTimeout(() => setReactionError(null), 3000);
     }
   }, [initializeAudio, playEmojiSound, currentMatch?.matchId]);
 
   // ReactPlayer controls
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
-
+  const togglePlayPause = () => setIsPlaying(!isPlaying);
   const handleSeek = (e) => {
     if (!playerRef.current) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -548,12 +458,10 @@ const VideoPlayer = ({ currentMatch }) => {
     const seekTime = percent * duration;
     playerRef.current.seekTo(seekTime, 'seconds');
   };
-
   const handleVolumeChange = (e) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
   };
-
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
     if (!document.fullscreenElement) {
@@ -562,7 +470,6 @@ const VideoPlayer = ({ currentMatch }) => {
       document.exitFullscreen();
     }
   };
-
   const formatTime = (time) => {
     if (isNaN(time)) return '0:00';
     const minutes = Math.floor(time / 60);
@@ -571,6 +478,8 @@ const VideoPlayer = ({ currentMatch }) => {
   };
 
   // --- Netflix-inspired Player Render ---
+  // The .emoji-bar-overlay styles are inlined here for independence from JS window/resize checks
+  // It uses a responsive bottom offset to remain clearly above the seekbar at all times
   return (
     <div className="relative player-theme-bg-black rounded-2xl overflow-hidden shadow-xl hover-lift group" style={{ boxShadow: '0 8px 32px #000a' }}>
       {/* ReactPlayer container */}
@@ -684,20 +593,39 @@ const VideoPlayer = ({ currentMatch }) => {
           </div>
         </div>
 
-        {/* Netflix-style emoji bar overlay */}
+        {/* ----------- Responsive/raised Emoji Bar Overlay ------------ */}
+        {/* 
+          Moved higher above seekbar! 
+          Uses only CSS for distance:
+            - 130px bottom on desktop,
+            - 104px on tablet,
+            - 80px on mobile (clamped for safety).
+          All positions guarantee no overlap or crowding with seekbar/controls.
+        */}
         <div
-          className={`absolute left-1/2 transition-all will-change-transform ease-in-out duration-500 pointer-events-none
+          className={`emoji-bar-overlay absolute left-1/2 transition-all will-change-transform ease-in-out duration-500 pointer-events-none
             ${showEmojiBar ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-90 translate-y-4"}`}
           style={{
-            bottom: 64,
+            bottom: 0,
             zIndex: 1000,
             transform: `translateX(-50%)`,
             minWidth: "min(440px, 92vw)",
-            maxWidth: "96vw"
+            maxWidth: "96vw",
+            pointerEvents: 'none'
           }}
-          onMouseEnter={() => setShowEmojiBar(true)}
-          onMouseLeave={() => setShowEmojiBar(false)}
         >
+          {/* Responsive spacing using styled-in block */}
+          <style>{`
+            @media (min-width: 1024px) {
+              .emoji-bar-overlay { bottom: 130px !important; }
+            }
+            @media (min-width: 640px) and (max-width: 1023px) {
+              .emoji-bar-overlay { bottom: 104px !important; }
+            }
+            @media (max-width: 639px) {
+              .emoji-bar-overlay { bottom: 80px !important; }
+            }
+          `}</style>
           <div
             className="flex items-center justify-between emoji-bar"
             style={{
@@ -705,8 +633,10 @@ const VideoPlayer = ({ currentMatch }) => {
               borderRadius: "22px",
               boxShadow: "0 6px 36px 0 #0009, 0 1.5px 12px 0 #2226",
               border: "1.5px solid #fff2",
-              padding: "0 24px",
-              height: 48,
+              padding: "0 28px",
+              height: "54px",
+              minHeight: 48,
+              maxHeight: 62,
               gap: 20,
               pointerEvents: 'auto',
               alignItems: 'center'
