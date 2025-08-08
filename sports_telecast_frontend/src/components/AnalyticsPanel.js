@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 
 // PUBLIC_INTERFACE
 const AnalyticsPanel = () => {
+  // Only show statistics and upcoming matches, live chat removed
   const [activeTab, setActiveTab] = useState('stats');
-  const [newMessage, setNewMessage] = useState('');
   const [stats, setStats] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [statsError, setStatsError] = useState(null);
@@ -11,14 +11,6 @@ const AnalyticsPanel = () => {
   const [upcomingMatches, setUpcomingMatches] = useState([]);
   const [loadingUpcoming, setLoadingUpcoming] = useState(true);
   const [upcomingError, setUpcomingError] = useState(null);
-
-  // Chat/demo only
-  const [chatMessages, setChatMessages] = useState([
-    { id: 1, user: 'SportsF4n', message: 'Great goal by Arsenal! 🔥', time: '2m', avatar: '🔥' },
-    { id: 2, user: 'FootyExpert', message: 'Chelsea needs to step up their game', time: '3m', avatar: '⚽' },
-    { id: 3, user: 'GoalMachine', message: 'This match is incredible!', time: '5m', avatar: '🎯' },
-    { id: 4, user: 'PremierFan', message: 'Arsenal looking strong today', time: '7m', avatar: '🏆' }
-  ]);
 
   // Static mock data for match statistics
   const mockStats = [
@@ -34,7 +26,6 @@ const AnalyticsPanel = () => {
   useEffect(() => {
     setLoadingStats(true);
     setStatsError(null);
-
     setTimeout(() => {
       setStats(mockStats);
       setLoadingStats(false);
@@ -89,26 +80,12 @@ const AnalyticsPanel = () => {
   useEffect(() => {
     setLoadingUpcoming(true);
     setUpcomingError(null);
-    
+
     setTimeout(() => {
       setUpcomingMatches(mockUpcomingMatches.slice(0, 5));
       setLoadingUpcoming(false);
     }, 400); // Simulate network delay
   }, []);
-
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      const message = {
-        id: Date.now(),
-        user: 'You',
-        message: newMessage,
-        time: 'now',
-        avatar: '👤'
-      };
-      setChatMessages(prev => [message, ...prev]);
-      setNewMessage('');
-    }
-  };
 
   const StatBar = ({ stat, index }) => {
     const total = stat.home + stat.away;
@@ -116,7 +93,7 @@ const AnalyticsPanel = () => {
     const awayPercent = total > 0 ? (stat.away / total) * 100 : 50;
 
     return (
-      <div 
+      <div
         className="space-y-2 scale-in"
         style={{ animationDelay: `${index * 0.1}s` }}
       >
@@ -129,13 +106,13 @@ const AnalyticsPanel = () => {
               {stat.label}
             </div>
             <div className="bg-tertiary-bg rounded-full h-3 relative overflow-hidden">
-              <div 
+              <div
                 className="bg-gradient-to-r from-red-500 to-red-600 h-full rounded-full transition-all duration-1000 ease-out relative"
                 style={{ width: `${homePercent}%` }}
               >
                 <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 hover:opacity-100 transition-opacity"></div>
               </div>
-              <div 
+              <div
                 className="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full absolute right-0 top-0 transition-all duration-1000 ease-out"
                 style={{ width: `${awayPercent}%` }}
               >
@@ -151,12 +128,13 @@ const AnalyticsPanel = () => {
     );
   };
 
+  // Only statistics and upcoming, remove chat tab/logic
   const tabs = [
     { id: 'stats', label: 'Statistics', icon: '📊' },
-    { id: 'chat', label: 'Live Chat', icon: '💬' },
     { id: 'matches', label: 'Upcoming', icon: '📅' }
   ];
 
+  // Only render the two tabs
   return (
     <div className="space-y-4">
       {/* Tab Navigation */}
@@ -183,7 +161,7 @@ const AnalyticsPanel = () => {
       {activeTab === 'stats' && (
         <div className="bg-secondary-bg rounded-xl p-6 hover-lift">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold text-text-primary font-primary tracking-tight" style={{letterSpacing: 0.1}}>Match Statistics</h3>
+            <h3 className="text-lg font-bold text-text-primary font-primary tracking-tight" style={{ letterSpacing: 0.1 }}>Match Statistics</h3>
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-accent-green rounded-full bounce-subtle"></div>
               <span className="text-xs text-text-secondary">Live Updates</span>
@@ -214,59 +192,6 @@ const AnalyticsPanel = () => {
         </div>
       )}
 
-      {/* Live Chat Tab */}
-      {activeTab === 'chat' && (
-        <div className="bg-secondary-bg rounded-xl overflow-hidden hover-lift">
-          <div className="p-4 border-b border-border-color">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-text-primary">Live Chat</h3>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-accent-green rounded-full bounce-subtle"></div>
-                <span className="text-xs text-text-secondary">{chatMessages.length} messages</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="h-80 overflow-y-auto p-4 space-y-4">
-            {chatMessages.map((msg, index) => (
-              <div key={msg.id} className="flex items-start space-x-3 slide-in-right" style={{ animationDelay: `${index * 0.05}s` }}>
-                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center text-sm">
-                  {msg.avatar}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-sm text-accent-blue font-medium">{msg.user}</span>
-                    <span className="text-xs text-text-muted">{msg.time}</span>
-                  </div>
-                  <p className="text-sm text-text-primary bg-tertiary-bg rounded-lg px-3 py-2">
-                    {msg.message}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          <div className="p-4 border-t border-border-color">
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Type a message..."
-                className="flex-1 bg-tertiary-bg border border-border-color rounded-lg px-4 py-2 text-sm text-text-primary placeholder-text-muted focus:border-accent-blue focus:outline-none transition-colors"
-              />
-              <button 
-                onClick={handleSendMessage}
-                className="bg-gradient-primary hover:shadow-lg text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-scale"
-              >
-                Send
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Upcoming Matches Tab */}
       {activeTab === 'matches' && (
         <div className="bg-secondary-bg rounded-xl p-6 hover-lift">
@@ -278,8 +203,8 @@ const AnalyticsPanel = () => {
           ) : (
             <div className="space-y-3">
               {upcomingMatches.map((match, index) => (
-                <div 
-                  key={match.match_id || index} 
+                <div
+                  key={match.match_id || index}
                   className="group p-4 bg-tertiary-bg rounded-xl hover:bg-hover-bg transition-all duration-200 cursor-pointer hover-scale slide-in-left"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
@@ -289,7 +214,7 @@ const AnalyticsPanel = () => {
                         {(match.home_team?.name ?? '') + " vs " + (match.away_team?.name ?? '')}
                       </div>
                       <div className="flex items-center space-x-2 mt-1">
-                        <span className="text-xs text-text-secondary">{match.start_time ? new Date(match.start_time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : 'TBD'}</span>
+                        <span className="text-xs text-text-secondary">{match.start_time ? new Date(match.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBD'}</span>
                         <span className="text-xs text-text-muted">•</span>
                         <span className="text-xs text-text-secondary">Upcoming</span>
                       </div>
@@ -307,7 +232,7 @@ const AnalyticsPanel = () => {
               ))}
             </div>
           )}
-          
+
           <button className="w-full mt-4 p-3 border-2 border-dashed border-border-color rounded-xl text-text-secondary hover:border-accent-blue hover:text-accent-blue transition-all duration-200 text-center">
             <span className="text-sm font-medium">View All Upcoming Matches</span>
           </button>
