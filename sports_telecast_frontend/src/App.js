@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import SportsFilter from './components/SportsFilter';
 import VideoPlayer from './components/VideoPlayer';
-import MatchInfoSection from './components/MatchInfoSection';
 import AnalyticsPanel from './components/AnalyticsPanel';
-import MatchSummary from './components/MatchSummary';
-import SportsCards from './components/SportsCards';
 import './App.css';
 
 // PUBLIC_INTERFACE
@@ -14,33 +11,6 @@ function App() {
   const [viewerCount, setViewerCount] = useState(12847);
   const [isLoading, setIsLoading] = useState(true);
   const [theme] = useState('dark');
-  const [currentMatch, setCurrentMatch] = useState(null);
-  const [matchLoading, setMatchLoading] = useState(false);
-  const [matchError, setMatchError] = useState(null);
-
-  // Static mock data for current match
-  const mockCurrentMatch = {
-    matchId: 'live_match_001',
-    homeTeam: 'Arsenal',
-    awayTeam: 'Chelsea',
-    homeScore: 2,
-    awayScore: 1,
-    status: 'LIVE',
-    time: '67:45',
-    competition: 'Premier League',
-    streamUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
-  };
-
-  // Load current match with simulated delay
-  useEffect(() => {
-    setMatchLoading(true);
-    setMatchError(null);
-
-    setTimeout(() => {
-      setCurrentMatch(mockCurrentMatch);
-      setMatchLoading(false);
-    }, 600); // Simulate network delay
-  }, []);
 
   // Simulate real-time viewer count updates
   useEffect(() => {
@@ -54,17 +24,14 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // App loading screen (just for show, transition to loaded once match is ready)
+  // App loading screen (just for show, transition to loaded)
   useEffect(() => {
-    if (matchLoading) {
-      setIsLoading(true);
-    } else {
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-      }, 800); // Fast fade after match data
-      return () => clearTimeout(timer);
-    }
-  }, [matchLoading]);
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSportChange = (sport) => {
     setSelectedSport(sport);
@@ -115,33 +82,22 @@ function App() {
 
       {/* Header */}
       <Header viewerCount={viewerCount} />
-      
+
       {/* Main Content */}
       <div className="pt-16 relative z-10">
         {/* Sports Filter */}
         <SportsFilter selectedSport={selectedSport} onSportChange={handleSportChange} />
         
-        {/* Match Info Section */}
-        <div className="max-w-7xl mx-auto p-4 sm:p-6 pt-0">
-          {matchLoading && <div className="py-12 text-lg text-center text-text-secondary">Loading match info...</div>}
-          {matchError && <div className="p-4 bg-red-900/50 rounded text-red-300 mb-4">{matchError}</div>}
-          {currentMatch && <MatchInfoSection currentMatch={currentMatch} />}
-        </div>
-        
-        {/* Main Layout Grid */}
+        {/* Video/Analytics Section */}
         <div className="max-w-7xl mx-auto p-4 sm:p-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Main Video Area */}
             <div className="lg:col-span-8 space-y-6">
               <div className="slide-in-left">
-                {/* Pass currentMatch to VideoPlayer only when loaded */}
-                {currentMatch && <VideoPlayer currentMatch={currentMatch} />}
-              </div>
-              <div className="slide-in-left" style={{ animationDelay: '0.1s' }}>
-                {currentMatch && <MatchSummary currentMatch={currentMatch} />}
+                <VideoPlayer />
               </div>
             </div>
-            
+
             {/* Right Sidebar */}
             <div className="lg:col-span-4">
               <div className="slide-in-right">
@@ -150,16 +106,7 @@ function App() {
             </div>
           </div>
         </div>
-        
-        {/* Sports Cards Section */}
-        <div className="max-w-7xl mx-auto p-4 sm:p-6 pt-8">
-          <div className="slide-in-left" style={{ animationDelay: '0.4s' }}>
-            <SportsCards 
-              selectedSport={selectedSport} 
-              onSportChange={handleSportChange}
-            />
-          </div>
-        </div>
+        {/* Sports Matches section, Match Cards, and summaries REMOVED */}
 
         {/* Footer */}
         <footer className="mt-16 bg-secondary-bg border-t border-border-color">
@@ -192,7 +139,6 @@ function App() {
                   <li><button className="hover:text-accent-blue transition-colors text-left">Baseball</button></li>
                 </ul>
               </div>
-              
               <div>
                 <h4 className="font-semibold text-text-primary mb-4">Features</h4>
                 <ul className="space-y-2 text-sm text-text-secondary">
@@ -203,7 +149,7 @@ function App() {
                 </ul>
               </div>
             </div>
-            
+
             <div className="border-t border-border-color mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
               <p className="text-text-muted text-sm">
                 © 2024 SportsStream. All rights reserved.
