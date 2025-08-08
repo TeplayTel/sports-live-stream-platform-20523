@@ -1,15 +1,17 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import ReactPlayer from 'react-player';
+import emojiService from '../services/emojiService';
+import websocketService from '../services/websocketService';
 
 // PUBLIC_INTERFACE
 const VideoPlayer = ({ currentMatch }) => {
   /**
    * Enhanced video player component with ReactPlayer, premium emoji reactions, sound effects, and natural flying animations
    * Features sleek glassmorphism design, smooth animations, distinct sounds per emoji, and improved user experience
+   * Integrates with backend API and WebSocket for real-time reactions
    */
   const playerRef = useRef(null);
   const containerRef = useRef(null);
-  const wsRef = useRef(null);
   const audioContextRef = useRef(null);
   const soundCacheRef = useRef({});
 
@@ -22,64 +24,80 @@ const VideoPlayer = ({ currentMatch }) => {
   const [duration, setDuration] = useState(0);
   const [quality, setQuality] = useState('HD');
   const [showQualityMenu, setShowQualityMenu] = useState(false);
-  const [globalReactionCount, setGlobalReactionCount] = useState(2847);
-  const [emojiCounts, setEmojiCounts] = useState({
-    love: 342,
-    laugh: 128,
-    wow: 89,
-    clap: 205,
-    fire: 167,
-    soccer: 95
-  });
+  const [globalReactionCount, setGlobalReactionCount] = useState(0);
+  const [emojiCounts, setEmojiCounts] = useState({});
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [videoError, setVideoError] = useState(null);
   const [isBuffering, setIsBuffering] = useState(false);
+  
+  // Backend integration states
+  const [availableEmojis, setAvailableEmojis] = useState([]);
+  const [emojiMapping, setEmojiMapping] = useState({});
+  const [isLoadingEmojis, setIsLoadingEmojis] = useState(true);
+  const [apiError, setApiError] = useState(null);
+  const [wsConnected, setWsConnected] = useState(false);
+  const [reactionError, setReactionError] = useState(null);
 
-  // Enhanced emoji configuration with sound frequencies and colors
-  const emojis = [
+  // Enhanced emoji configuration with sound frequencies and colors (fallback)
+  const fallbackEmojis = [
     {
       emoji: '❤️',
       color: '#ff1744',
       name: 'love',
-      sound: { frequency: 523.25, type: 'sine', duration: 0.3 }, // C5 - warm, loving
+      emoji_id: 'EMJ001',
+      emoji_type: 'heart',
+      sound: { frequency: 523.25, type: 'sine', duration: 0.3 },
       gradient: 'from-pink-500 via-red-500 to-rose-600'
     },
     {
       emoji: '😂',
       color: '#ffeb3b',
       name: 'laugh',
-      sound: { frequency: 659.25, type: 'triangle', duration: 0.4 }, // E5 - bright, cheerful
+      emoji_id: 'EMJ002',
+      emoji_type: 'laugh',
+      sound: { frequency: 659.25, type: 'triangle', duration: 0.4 },
       gradient: 'from-yellow-400 via-amber-500 to-orange-500'
     },
     {
       emoji: '😮',
       color: '#2196f3',
       name: 'wow',
-      sound: { frequency: 440, type: 'sawtooth', duration: 0.5 }, // A4 - surprising
+      emoji_id: 'EMJ003',
+      emoji_type: 'shocked',
+      sound: { frequency: 440, type: 'sawtooth', duration: 0.5 },
       gradient: 'from-blue-400 via-blue-500 to-indigo-600'
     },
     {
       emoji: '👏',
       color: '#4caf50',
       name: 'clap',
-      sound: { frequency: 349.23, type: 'square', duration: 0.2 }, // F4 - percussive
+      emoji_id: 'EMJ004',
+      emoji_type: 'clap',
+      sound: { frequency: 349.23, type: 'square', duration: 0.2 },
       gradient: 'from-green-400 via-emerald-500 to-green-600'
     },
     {
       emoji: '🔥',
       color: '#ff5722',
       name: 'fire',
-      sound: { frequency: 783.99, type: 'sawtooth', duration: 0.3 }, // G5 - intense
+      emoji_id: 'EMJ005',
+      emoji_type: 'fire',
+      sound: { frequency: 783.99, type: 'sawtooth', duration: 0.3 },
       gradient: 'from-orange-500 via-red-500 to-red-600'
     },
     {
       emoji: '⚽',
       color: '#ffffff',
       name: 'soccer',
-      sound: { frequency: 293.66, type: 'sine', duration: 0.25 }, // D4 - sports-like
+      emoji_id: 'EMJ006',
+      emoji_type: 'goal',
+      sound: { frequency: 293.66, type: 'sine', duration: 0.25 },
       gradient: 'from-gray-300 via-gray-100 to-white'
     }
   ];
+
+  // Get current emoji set (from API or fallback)
+  const emojis = availableEmojis.length > 0 ? availableEmojis : fallbackEmojis;
 
   // Video URL for ReactPlayer
   const videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
@@ -168,26 +186,175 @@ const VideoPlayer = ({ currentMatch }) => {
     }
   }, [createEmojiSound]);
 
-  // Mock WebSocket for real-time reaction updates
+  // Load available emojis from backend
   useEffect(() => {
-    const connectWebSocket = () => {
-      console.log('Connecting to mock WebSocket for reactions...');
-
-      const interval = setInterval(() => {
-        const randomChange = Math.floor(Math.random() * 10) - 5;
-        setGlobalReactionCount(prev => Math.max(0, prev + randomChange));
-      }, 3000);
-
-      wsRef.current = () => clearInterval(interval);
-    };
-
-    connectWebSocket();
-    return () => {
-      if (wsRef.current) {
-        wsRef.current();
+    const loadEmojis = async () => {
+      try {
+        setIsLoadingEmojis(true);
+        setApiError(null);
+        
+        const response = await emojiService.getEmojis(1, 10);
+        
+        if (response && response.emojis) {
+          // Transform backend emojis to frontend format
+          const transformedEmojis = response.emojis.map((apiEmoji, index) => {
+            const fallback = fallbackEmojis[index] || fallbackEmojis[0];
+            
+            return {
+              emoji: getEmojiSymbol(apiEmoji.emoji_type),
+              color: getEmojiColor(apiEmoji.emoji_type),
+              name: apiEmoji.name.toLowerCase(),
+              emoji_id: apiEmoji.emoji_id,
+              emoji_type: apiEmoji.emoji_type,
+              sound: fallback.sound,
+              gradient: fallback.gradient
+            };
+          });
+          
+          setAvailableEmojis(transformedEmojis);
+          
+          // Create mapping for counts
+          const mapping = {};
+          transformedEmojis.forEach(emoji => {
+            mapping[emoji.name] = emoji.emoji_id;
+          });
+          setEmojiMapping(mapping);
+          
+          // Initialize emoji counts
+          const initialCounts = {};
+          transformedEmojis.forEach(emoji => {
+            initialCounts[emoji.name] = 0;
+          });
+          setEmojiCounts(initialCounts);
+        }
+      } catch (error) {
+        console.error('Failed to load emojis, using fallback:', error);
+        setApiError('Failed to load emojis from server');
+        // Fallback emojis are already set as default
+        const initialCounts = {};
+        fallbackEmojis.forEach(emoji => {
+          initialCounts[emoji.name] = Math.floor(Math.random() * 100);
+        });
+        setEmojiCounts(initialCounts);
+      } finally {
+        setIsLoadingEmojis(false);
       }
     };
+
+    loadEmojis();
   }, []);
+
+  // Helper functions for emoji transformation
+  const getEmojiSymbol = (emojiType) => {
+    const symbols = {
+      heart: '❤️',
+      laugh: '😂',
+      shocked: '😮',
+      clap: '👏',
+      fire: '🔥',
+      goal: '⚽'
+    };
+    return symbols[emojiType] || '👍';
+  };
+
+  const getEmojiColor = (emojiType) => {
+    const colors = {
+      heart: '#ff1744',
+      laugh: '#ffeb3b',
+      shocked: '#2196f3',
+      clap: '#4caf50',
+      fire: '#ff5722',
+      goal: '#ffffff'
+    };
+    return colors[emojiType] || '#ffffff';
+  };
+
+  // WebSocket connection for real-time updates
+  useEffect(() => {
+    if (!currentMatch?.matchId) return;
+
+    const eventId = currentMatch.matchId;
+    
+    // Set up WebSocket event listeners
+    const handleReactionUpdate = (data) => {
+      console.log('🔄 Received reaction update:', data);
+      
+      if (data.emoji_counts) {
+        // Update emoji counts from WebSocket data
+        const updatedCounts = {};
+        Object.entries(data.emoji_counts).forEach(([emojiId, count]) => {
+          // Find emoji name by ID
+          const emoji = emojis.find(e => e.emoji_id === emojiId);
+          if (emoji) {
+            updatedCounts[emoji.name] = count;
+          }
+        });
+        setEmojiCounts(prev => ({ ...prev, ...updatedCounts }));
+      }
+      
+      if (data.total_reactions !== undefined) {
+        setGlobalReactionCount(data.total_reactions);
+      }
+    };
+
+    const handleConnect = () => {
+      console.log('✅ WebSocket connected');
+      setWsConnected(true);
+    };
+
+    const handleDisconnect = () => {
+      console.log('❌ WebSocket disconnected');
+      setWsConnected(false);
+    };
+
+    const handleError = (error) => {
+      console.error('❌ WebSocket error:', error);
+      setWsConnected(false);
+    };
+
+    // Register listeners
+    websocketService.on('reaction', handleReactionUpdate);
+    websocketService.on('connect', handleConnect);
+    websocketService.on('disconnect', handleDisconnect);
+    websocketService.on('error', handleError);
+
+    // Connect to WebSocket
+    websocketService.connect(eventId);
+
+    // Load initial reaction counts
+    const loadInitialReactions = async () => {
+      try {
+        const summary = await emojiService.getEventReactions(eventId);
+        if (summary.emoji_counts) {
+          const updatedCounts = {};
+          Object.entries(summary.emoji_counts).forEach(([emojiId, count]) => {
+            const emoji = emojis.find(e => e.emoji_id === emojiId);
+            if (emoji) {
+              updatedCounts[emoji.name] = count;
+            }
+          });
+          setEmojiCounts(prev => ({ ...prev, ...updatedCounts }));
+        }
+        if (summary.total_reactions !== undefined) {
+          setGlobalReactionCount(summary.total_reactions);
+        }
+      } catch (error) {
+        console.warn('Could not load initial reactions:', error);
+      }
+    };
+
+    loadInitialReactions();
+
+    // Cleanup
+    return () => {
+      websocketService.off('reaction', handleReactionUpdate);
+      websocketService.off('connect', handleConnect);
+      websocketService.off('disconnect', handleDisconnect);
+      websocketService.off('error', handleError);
+      websocketService.disconnect();
+      setWsConnected(false);
+    };
+  }, [currentMatch?.matchId, emojis]);
 
   // ReactPlayer event handlers
   const handleReady = () => {
@@ -275,8 +442,8 @@ const VideoPlayer = ({ currentMatch }) => {
     };
   }, [isPlaying]);
 
-  // Enhanced emoji reaction handler with sound and improved animations
-  const handleEmojiReaction = useCallback((emojiData) => {
+  // Enhanced emoji reaction handler with backend integration
+  const handleEmojiReaction = useCallback(async (emojiData) => {
     // Initialize audio on first interaction
     initializeAudio();
 
@@ -313,10 +480,10 @@ const VideoPlayer = ({ currentMatch }) => {
       }, newFlyingReaction.delay);
     }
 
-    // Update counts with smooth animation
+    // Optimistic UI update - immediately update counts
     setEmojiCounts(prev => ({
       ...prev,
-      [emojiData.name]: prev[emojiData.name] + 1
+      [emojiData.name]: (prev[emojiData.name] || 0) + 1
     }));
 
     setGlobalReactionCount(prev => prev + 1);
@@ -334,7 +501,40 @@ const VideoPlayer = ({ currentMatch }) => {
     }
 
     console.log(`🎵 ${emojiData.name} reaction with ${emojiData.sound.type} sound at ${emojiData.sound.frequency}Hz`);
-  }, [initializeAudio, playEmojiSound]);
+
+    // Submit reaction to backend
+    try {
+      setReactionError(null);
+      
+      if (!currentMatch?.matchId) {
+        throw new Error('No event ID available');
+      }
+
+      const response = await emojiService.submitReaction(
+        currentMatch.matchId, 
+        emojiData.emoji_id
+      );
+      
+      console.log('✅ Reaction submitted successfully:', response);
+      
+      // The WebSocket will handle the real-time update to all clients
+      // so we don't need to manually update counts here
+      
+    } catch (error) {
+      console.error('❌ Failed to submit reaction:', error);
+      setReactionError(`Failed to submit ${emojiData.name} reaction`);
+      
+      // Revert optimistic update on error
+      setEmojiCounts(prev => ({
+        ...prev,
+        [emojiData.name]: Math.max(0, (prev[emojiData.name] || 0) - 1)
+      }));
+      setGlobalReactionCount(prev => Math.max(0, prev - 1));
+      
+      // Clear error after 3 seconds
+      setTimeout(() => setReactionError(null), 3000);
+    }
+  }, [initializeAudio, playEmojiSound, currentMatch?.matchId]);
 
   // ReactPlayer controls
   const togglePlayPause = () => {
@@ -474,6 +674,32 @@ const VideoPlayer = ({ currentMatch }) => {
           </div>
         ))}
 
+        {/* Error Messages */}
+        {(apiError || reactionError) && (
+          <div className="absolute top-4 right-4 z-40 max-w-xs">
+            {apiError && (
+              <div className="bg-yellow-900/90 text-yellow-300 px-4 py-2 rounded-lg text-sm mb-2 backdrop-blur-sm">
+                ⚠️ {apiError}
+              </div>
+            )}
+            {reactionError && (
+              <div className="bg-red-900/90 text-red-300 px-4 py-2 rounded-lg text-sm backdrop-blur-sm">
+                ❌ {reactionError}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Connection Status */}
+        {!wsConnected && (
+          <div className="absolute top-4 left-4 z-40">
+            <div className="bg-orange-900/90 text-orange-300 px-3 py-1 rounded-lg text-xs backdrop-blur-sm flex items-center">
+              <div className="w-2 h-2 bg-orange-300 rounded-full mr-2 animate-pulse"></div>
+              Reconnecting...
+            </div>
+          </div>
+        )}
+
         {/* Sleek Emoji Bar */}
         <div
           className={`absolute left-1/2 transform -translate-x-1/2 transition-all duration-700 ease-out ${
@@ -515,51 +741,66 @@ const VideoPlayer = ({ currentMatch }) => {
                 alignItems: 'center'
               }}
             >
-              {emojis.map((emoji, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleEmojiReaction(emoji)}
-                  className="emoji-button flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-125 focus:scale-110 active:scale-95"
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    borderRadius: '50%',
-                    width: '36px',
-                    height: '36px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                  tabIndex={0}
-                  title={`React with ${emoji.name}`}
-                  aria-label={`React with ${emoji.name}`}
-                  onMouseDown={e => e.preventDefault()}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                    e.currentTarget.style.boxShadow = `0 0 16px ${emoji.color}40`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  <span
+              {isLoadingEmojis ? (
+                // Loading state
+                [...Array(6)].map((_, index) => (
+                  <div
+                    key={index}
+                    className="w-9 h-9 bg-white/10 rounded-full animate-pulse"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  ></div>
+                ))
+              ) : (
+                emojis.map((emoji, index) => (
+                  <button
+                    key={emoji.emoji_id || index}
+                    onClick={() => handleEmojiReaction(emoji)}
+                    disabled={reactionError !== null}
+                    className={`emoji-button flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-125 focus:scale-110 active:scale-95 ${
+                      reactionError ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    }`}
                     style={{
-                      fontSize: '24px',
-                      lineHeight: 1,
+                      background: 'transparent',
+                      border: 'none',
+                      outline: 'none',
+                      borderRadius: '50%',
+                      width: '36px',
+                      height: '36px',
                       transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                      filter: `drop-shadow(0 0 6px ${emoji.color}60) brightness(1.1)`,
-                      userSelect: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
-                    className="select-none"
+                    tabIndex={0}
+                    title={`React with ${emoji.name} (${emojiCounts[emoji.name] || 0})`}
+                    aria-label={`React with ${emoji.name}, current count: ${emojiCounts[emoji.name] || 0}`}
+                    onMouseDown={e => e.preventDefault()}
+                    onMouseEnter={(e) => {
+                      if (!reactionError) {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                        e.currentTarget.style.boxShadow = `0 0 16px ${emoji.color}40`;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
                   >
-                    {emoji.emoji}
-                  </span>
-                </button>
-              ))}
+                    <span
+                      style={{
+                        fontSize: '24px',
+                        lineHeight: 1,
+                        transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                        filter: `drop-shadow(0 0 6px ${emoji.color}60) brightness(1.1)`,
+                        userSelect: 'none',
+                      }}
+                      className="select-none"
+                    >
+                      {emoji.emoji}
+                    </span>
+                  </button>
+                ))
+              )}
             </div>
 
             {/* Total Reaction Count */}
@@ -568,10 +809,11 @@ const VideoPlayer = ({ currentMatch }) => {
               style={{
                 minWidth: '80px',
                 height: '32px',
-                background: 'rgba(255,255,255,0.15)',
+                background: wsConnected ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255,255,255,0.15)',
                 borderRadius: '16px',
                 padding: '0 12px',
                 marginLeft: '16px',
+                border: wsConnected ? '1px solid rgba(34, 197, 94, 0.3)' : 'none',
               }}
             >
               <span
@@ -585,7 +827,7 @@ const VideoPlayer = ({ currentMatch }) => {
                   letterSpacing: '0.3px',
                 }}
                 aria-live="polite"
-                aria-label={`Total reactions: ${globalReactionCount}`}
+                aria-label={`Total reactions: ${globalReactionCount}${wsConnected ? ', live updates active' : ', offline mode'}`}
               >
                 {globalReactionCount.toLocaleString()}
               </span>
