@@ -570,9 +570,10 @@ const VideoPlayer = ({ currentMatch }) => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // --- Netflix-inspired Player Render ---
   return (
-    <div className="relative bg-black rounded-xl overflow-hidden shadow-xl hover-lift group">
-      {/* ReactPlayer Container */}
+    <div className="relative player-theme-bg-black rounded-2xl overflow-hidden shadow-xl hover-lift group" style={{ boxShadow: '0 8px 32px #000a' }}>
+      {/* ReactPlayer container */}
       <div
         ref={containerRef}
         className="relative aspect-video group"
@@ -601,7 +602,7 @@ const VideoPlayer = ({ currentMatch }) => {
           config={{
             file: {
               attributes: {
-                poster: "https://via.placeholder.com/800x450/1a1a1a/ffffff?text=Sports+Stream"
+                poster: "https://via.placeholder.com/800x450/161616/ffffff?text=SportsStream"
               }
             }
           }}
@@ -614,29 +615,28 @@ const VideoPlayer = ({ currentMatch }) => {
 
         {/* Loading Overlay */}
         {(isVideoLoading || isBuffering) && (
-          <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-20">
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto"></div>
-              <p className="text-white text-lg font-medium">
-                {isBuffering ? 'Buffering...' : 'Loading stream...'}
-              </p>
+          <div className="absolute inset-0 flex items-center justify-center z-30" style={{
+            background: "linear-gradient(180deg, #121212e6 70%, #000d 100%)"
+          }}>
+            <div className="text-center space-y-5">
+              <svg className="animate-spin mx-auto" style={{ width: 64, height: 64, color: '#fff', opacity: 0.92 }} viewBox="0 0 50 50" fill="none">
+                <circle cx="25" cy="25" r="22" stroke="#fff2" strokeWidth="7" />
+                <path d="M47 25A22 22 0 0 1 25 47" stroke="#E50914" strokeWidth="8" strokeLinecap="round" />
+              </svg>
+              <p className="text-white text-lg font-semibold tracking-wide drop-shadow">{isBuffering ? "Buffering..." : "Loading stream..."}</p>
             </div>
           </div>
         )}
 
         {/* Error Overlay */}
         {videoError && (
-          <div className="absolute inset-0 bg-black/90 flex items-center justify-center z-20">
-            <div className="text-center space-y-4 max-w-md px-6">
-              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto">
-                <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
+          <div className="absolute inset-0 bg-black/95 flex items-center justify-center z-40">
+            <div className="text-center space-y-6 max-w-md px-6">
+              <div className="flex items-center justify-center">
+                <svg className="w-16 h-16 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" strokeWidth="5" className="text-red-800" fill="#2e0000" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M24 16v12m0 7h.01" /></svg>
               </div>
-              <div>
-                <h3 className="text-white text-xl font-bold mb-2">Stream Error</h3>
-                <p className="text-white/80 text-sm">{videoError}</p>
-              </div>
+              <h3 className="text-white text-2xl font-bold mb-1">Playback Error</h3>
+              <p className="text-white/80 text-base font-medium">{videoError}</p>
               <button
                 onClick={() => {
                   setVideoError(null);
@@ -645,19 +645,18 @@ const VideoPlayer = ({ currentMatch }) => {
                     playerRef.current.seekTo(0);
                   }
                 }}
-                className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-              >
-                Retry
-              </button>
+                className="px-7 py-2 bg-accent-red rounded-xl text-white text-base font-bold mt-2 shadow-lg hover:bg-accent-red-hover transition"
+                style={{ letterSpacing: "0.05em" }}
+              >Retry</button>
             </div>
           </div>
         )}
 
-        {/* Flying Emoji Animations */}
+        {/* Flying emojis (unchanged) */}
         {flyingReactions.map((reaction) => (
           <div
             key={reaction.id}
-            className="absolute pointer-events-none z-30"
+            className="absolute pointer-events-none z-50"
             style={{
               left: `${reaction.startX}%`,
               top: `${reaction.startY}%`,
@@ -669,299 +668,278 @@ const VideoPlayer = ({ currentMatch }) => {
               '--rotation': `${reaction.rotation}deg`,
               '--curve': `${reaction.curve}px`
             }}
-          >
-            {reaction.emoji}
-          </div>
+          >{reaction.emoji}</div>
         ))}
 
-        {/* Error Messages */}
-        {(apiError || reactionError) && (
-          <div className="absolute top-4 right-4 z-40 max-w-xs">
-            {apiError && (
-              <div className="bg-yellow-900/90 text-yellow-300 px-4 py-2 rounded-lg text-sm mb-2 backdrop-blur-sm">
-                ⚠️ {apiError}
-              </div>
-            )}
-            {reactionError && (
-              <div className="bg-red-900/90 text-red-300 px-4 py-2 rounded-lg text-sm backdrop-blur-sm">
-                ❌ {reactionError}
-              </div>
-            )}
+        {/* Top overlays: LIVE badge, etc. */}
+        <div className="absolute top-0 left-0 right-0 z-20 flex justify-between px-6 pt-5 pointer-events-none select-none">
+          <div>
+            <span className="bg-accent-red/90 rounded px-3 py-1 text-xs font-black uppercase tracking-widest text-white shadow-lg"
+                  style={{ letterSpacing: "0.15em", boxShadow: "0 0 16px #e5091470" }}>
+              LIVE
+            </span>
           </div>
-        )}
-
-        {/* Connection Status */}
-        {!wsConnected && (
-          <div className="absolute top-4 left-4 z-40">
-            <div className="bg-orange-900/90 text-orange-300 px-3 py-1 rounded-lg text-xs backdrop-blur-sm flex items-center">
-              <div className="w-2 h-2 bg-orange-300 rounded-full mr-2 animate-pulse"></div>
-              Reconnecting...
-            </div>
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-white/60 font-medium">{quality}</span>
           </div>
-        )}
+        </div>
 
-        {/* Sleek Emoji Bar */}
+        {/* Netflix-style emoji bar overlay */}
         <div
-          className={`absolute left-1/2 transform -translate-x-1/2 transition-all duration-700 ease-out ${
-            showEmojiBar ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'
-          }`}
+          className={`absolute left-1/2 transition-all will-change-transform ease-in-out duration-500 pointer-events-none
+            ${showEmojiBar ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-90 translate-y-4"}`}
           style={{
-            bottom: '48px',
+            bottom: 64,
             zIndex: 1000,
-            pointerEvents: showEmojiBar ? 'auto' : 'none',
-            width: 'auto',
-            minWidth: 'min(480px, 90vw)',
-            maxWidth: '90vw'
+            transform: `translateX(-50%)`,
+            minWidth: "min(440px, 92vw)",
+            maxWidth: "96vw"
           }}
           onMouseEnter={() => setShowEmojiBar(true)}
           onMouseLeave={() => setShowEmojiBar(false)}
         >
           <div
-            className="emoji-bar flex items-center justify-between"
+            className="flex items-center justify-between emoji-bar"
             style={{
-              background: 'rgba(0, 0, 0, 0.8)',
-              borderRadius: '24px',
-              border: '1px solid rgba(255,255,255,0.2)',
-              boxShadow: '0 4px 24px 0 rgba(0,0,0,0.4), 0 2px 8px 0 rgba(0,0,0,0.2)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              height: '44px',
-              padding: '0 20px',
+              background: "rgba(20, 20, 20, 0.92)",
+              borderRadius: "22px",
+              boxShadow: "0 6px 36px 0 #0009, 0 1.5px 12px 0 #2226",
+              border: "1.5px solid #fff2",
+              padding: "0 24px",
+              height: 48,
+              gap: 20,
               pointerEvents: 'auto',
-              transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+              alignItems: 'center'
             }}
           >
-            {/* Emoji Icons Container */}
-            <div 
-              className="flex items-center justify-center flex-1"
-              style={{ 
-                display: 'flex', 
-                gap: '20px',
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}
-            >
+            {/* Emoji Buttons */}
+            <div className="flex items-center gap-2" style={{ gap: 20 }}>
               {isLoadingEmojis ? (
-                // Loading state
-                [...Array(6)].map((_, index) => (
-                  <div
-                    key={index}
-                    className="w-9 h-9 bg-white/10 rounded-full animate-pulse"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  ></div>
+                [...Array(6)].map((_, idx) => (
+                    <div key={idx} className="w-10 h-10 bg-white/10 rounded-full animate-pulse" />
                 ))
               ) : (
-                emojis.map((emoji, index) => (
+                emojis.map((emoji, idx) => (
                   <button
-                    key={emoji.emoji_id || index}
+                    key={emoji.emoji_id || idx}
                     onClick={() => handleEmojiReaction(emoji)}
                     disabled={reactionError !== null}
-                    className={`emoji-button flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-125 focus:scale-110 active:scale-95 ${
-                      reactionError ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                    }`}
+                    className={`emoji-button flex items-center justify-center cursor-pointer transition-transform duration-150
+                        rounded-full hover:scale-125 focus:scale-110 active:scale-95 select-none bg-transparent border-none`}
                     style={{
-                      background: 'transparent',
-                      border: 'none',
-                      outline: 'none',
-                      borderRadius: '50%',
-                      width: '36px',
-                      height: '36px',
-                      transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      width: 40, height: 40,
+                      outline: "none", userSelect: "none",
+                      filter: `drop-shadow(0 0 8px ${emoji.color}50)`,
                     }}
                     tabIndex={0}
                     title={`React with ${emoji.name} (${emojiCounts[emoji.name] || 0})`}
                     aria-label={`React with ${emoji.name}, current count: ${emojiCounts[emoji.name] || 0}`}
-                    onMouseDown={e => e.preventDefault()}
-                    onMouseEnter={(e) => {
-                      if (!reactionError) {
-                        e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                        e.currentTarget.style.boxShadow = `0 0 16px ${emoji.color}40`;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
                   >
-                    <span
-                      style={{
-                        fontSize: '24px',
-                        lineHeight: 1,
-                        transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                        filter: `drop-shadow(0 0 6px ${emoji.color}60) brightness(1.1)`,
-                        userSelect: 'none',
-                      }}
-                      className="select-none"
-                    >
-                      {emoji.emoji}
-                    </span>
+                    <span style={{
+                      fontSize: 26,
+                      lineHeight: 1.1,
+                      filter: `drop-shadow(0 0 7px ${emoji.color}50) brightness(1.12)`
+                    }}>{emoji.emoji}</span>
                   </button>
                 ))
               )}
             </div>
-
-            {/* Total Reaction Count */}
-            <div 
-              className="flex items-center justify-center"
+            {/* Total reaction count */}
+            <div
+              className="font-bold flex items-center tracking-tight select-none"
               style={{
-                minWidth: '80px',
-                height: '32px',
-                background: wsConnected ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255,255,255,0.15)',
-                borderRadius: '16px',
-                padding: '0 12px',
-                marginLeft: '16px',
-                border: wsConnected ? '1px solid rgba(34, 197, 94, 0.3)' : 'none',
+                minWidth: 82,
+                height: 30,
+                padding: "0 14px",
+                background: wsConnected ? "rgba(64,255,120,0.13)" : "rgba(255,255,255,0.10)",
+                borderRadius: 14,
+                border: wsConnected ? "1.5px solid #5fa" : "none",
+                color: "#fff",
+                fontSize: 15,
+                textShadow: "0 1px 4px #000a"
               }}
+              aria-live="polite"
+              aria-label={`Currently ${globalReactionCount} fan reactions, ${wsConnected ? "live" : "offline"}`}
             >
-              <span
-                className="text-center font-bold transition-all duration-300"
-                style={{
-                  fontFamily: 'Inter, Helvetica, Arial, sans-serif',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  color: '#ffffff',
-                  textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-                  letterSpacing: '0.3px',
-                }}
-                aria-live="polite"
-                aria-label={`Total reactions: ${globalReactionCount}${wsConnected ? ', live updates active' : ', offline mode'}`}
-              >
-                {globalReactionCount.toLocaleString()}
-              </span>
+              <svg width="24" height="20" style={{ marginRight: 6, opacity: 0.8, verticalAlign: "middle" }} fill="none" viewBox="0 0 24 20">
+                <path d="M2 18V8c0-3.866 3.134-7 7-7 3.108 0 5.743 1.997 6.675 4.75C16.79 6.583 18.848 7 22 7v11" stroke="#fff" strokeWidth="2" opacity="0.2"/>
+                <ellipse cx="19.5" cy="17" rx="2.5" ry="2.5" fill={wsConnected ? "#35eb85" : "#fff5"} />
+              </svg>
+              {globalReactionCount.toLocaleString()}
             </div>
           </div>
         </div>
 
-        {/* Video Player Controls Container */}
-        <div className={`absolute bottom-0 left-0 right-0 z-30 transition-all duration-300 ${
-          showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-        }`}>
-          <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4">
-            {/* Progress Bar / Seekbar */}
-            <div className="mb-4">
-              <div
-                className="h-1 bg-white/20 cursor-pointer hover:h-2 transition-all duration-200"
-                onClick={handleSeek}
-                style={{ borderRadius: '8px' }}
-              >
-                <div
-                  className="h-full bg-gradient-primary relative"
-                  style={{
+        {/* Connection Status / Errors */}
+        <div className="absolute top-5 left-6 z-40">
+          {!wsConnected && (
+            <div className="bg-[#2a194f] text-accent-red px-3 py-1 rounded-lg text-xs flex items-center font-semibold shadow"
+                 style={{ letterSpacing: ".02em", border: "1.5px solid #e5091440" }}>
+              <div className="w-2 h-2 bg-accent-red rounded-full mr-2 animate-pulse"></div> Connecting…
+            </div>
+          )}
+          {(apiError || reactionError) && (
+            <div className="mt-2">
+              {apiError && <div className="bg-yellow-900/95 text-yellow-300 px-3 py-1 rounded text-xs mb-2 shadow">{apiError}</div>}
+              {reactionError && <div className="bg-red-900/95 text-red-400 px-3 py-1 rounded text-xs shadow">{reactionError}</div>}
+            </div>
+          )}
+        </div>
+
+        {/* Netflix-Style Player Controls */}
+        <div
+          className={
+            "absolute bottom-0 left-0 right-0 z-50 pointer-events-none transition-all duration-300" +
+            (showControls ? " opacity-100 visible" : " opacity-0 invisible scale-100")
+          }
+        >
+          <div
+            className="flex items-end justify-center w-full" style={{
+              background: "linear-gradient(0, #101114d6 65%, #1a1e29a8 85%, transparent 100%)"
+            }}
+          >
+            <div
+              className="w-full max-w-3xl mx-auto px-8 pb-6 flex flex-col pointer-events-auto"
+              style={{ userSelect: "none" }}
+            >
+              {/* Progress/Seek Bar */}
+              <div className="w-full mb-4 cursor-pointer group" onClick={handleSeek}>
+                <div style={{
+                  height: 7,
+                  background: "rgba(245,245,250,0.08)",
+                  borderRadius: 6,
+                  position: "relative",
+                  overflow: "hidden"
+                }}>
+                  <div style={{
                     width: `${(currentTime / duration) * 100 || 0}%`,
-                    borderRadius: '8px'
-                  }}
-                >
-                  <div
-                    className="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ borderRadius: '50%' }}
-                  ></div>
+                    background: "linear-gradient(90deg, #d81233 0%, #b10237 65%, #fff 100%)",
+                    height: "100%",
+                    borderRadius: 6,
+                    transition: "width .18s cubic-bezier(.4,0,.2,1)"
+                  }}>
+                    <div style={{
+                      position: "absolute",
+                      right: 0,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      width: 18,
+                      height: 18,
+                      borderRadius: 12,
+                      background: "linear-gradient(90deg, #e50914 65%, #fff 100%)",
+                      boxShadow: "0 2px 8px #e509144f",
+                      opacity: 0.85,
+                    }}></div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Control Buttons */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 sm:space-x-4">
-                {/* Play/Pause */}
-                <button
-                  onClick={togglePlayPause}
-                  className="p-2 bg-white/20 hover:bg-white/30 transition-all duration-200 hover-scale"
-                  style={{ borderRadius: '8px' }}
-                >
-                  {isPlaying ? (
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  )}
-                </button>
-
-                {/* Volume - Hidden on mobile for space */}
-                <div className="hidden sm:flex items-center space-x-2">
-                  <button className="p-1 text-white hover:text-accent-blue transition-colors">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                    </svg>
-                  </button>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={volume}
-                    onChange={handleVolumeChange}
-                    className="w-16 lg:w-20"
-                    style={{
-                      accentColor: '#2196f3',
-                      background: 'rgba(255,255,255,0.2)',
-                      borderRadius: '4px'
-                    }}
-                  />
-                </div>
-
-                {/* Time Display */}
-                <div className="text-white text-xs sm:text-sm font-mono">
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                {/* Quality Selector */}
-                <div className="relative">
+              {/* Main Controls Section */}
+              <div className="flex w-full flex-row items-center justify-between space-x-4">
+                {/* Left Controls */}
+                <div className="flex space-x-2 sm:space-x-3 items-center">
+                  {/* Play / Pause */}
                   <button
-                    onClick={() => setShowQualityMenu(!showQualityMenu)}
-                    className="glass-effect text-white p-2 hover:bg-white/20 transition-all duration-200"
-                    style={{ borderRadius: '8px' }}
+                    aria-label={isPlaying ? "Pause" : "Play"}
+                    onClick={togglePlayPause}
+                    className="w-10 h-10 rounded-full flex items-center justify-center bg-white/15 hover:bg-accent-red/90 hover:scale-110 shadow
+                      border-2 border-white/10 focus:outline-none transition-colors transition-transform duration-150 pointer-events-auto"
                   >
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    {isPlaying ? (
+                      // Netflix pause
+                      <svg width="27" height="27" viewBox="0 0 68 68" fill="none">
+                        <rect x="16" y="15" width="8" height="38" rx="4" fill="#fff"/>
+                        <rect x="44" y="15" width="8" height="38" rx="4" fill="#fff"/>
+                      </svg>
+                    ) : (
+                      // Netflix Play
+                      <svg width="27" height="27" viewBox="0 0 68 68" fill="none">
+                        <path d="M20 14L56 34L20 54V14Z" fill="#fff" />
+                      </svg>
+                    )}
+                  </button>
+                  {/* Time */}
+                  <span className="text-white/90 font-mono ml-2 text-xs sm:text-sm" style={{ minWidth: 64, textAlign: "right" }}>
+                    {formatTime(currentTime)} / {formatTime(duration)}
+                  </span>
+                </div>
+                {/* Center Controls: (Reserved for future, could add 10sec backward/forward, etc.) */}
+                <div></div>
+                {/* Right Controls */}
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  {/* Volume (hide mobile) */}
+                  <div className="hidden sm:flex items-center space-x-1 bg-black/15 px-2 py-1 rounded-lg">
+                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" style={{ opacity: 0.8 }}>
+                      <path d="M4 9v6h4l5 5V4L8 9H4z" fill="#fff"/>
+                      <path d="M16 7c1.657 1.657 1.657 4.343 0 6" stroke="#fff" strokeWidth="1.7"/>
+                    </svg>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={volume}
+                      onChange={handleVolumeChange}
+                      className="w-18 h-2 accent-accent-red border-none"
+                      style={{
+                        accentColor: "#E50914",
+                        background: "transparent"
+                      }}
+                    />
+                  </div>
+                  {/* Quality */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowQualityMenu(!showQualityMenu)}
+                      className="rounded bg-white/15 hover:bg-white/25 px-3 py-2 mr-1 text-sm text-white/90 focus:outline-none border border-white/10 pointer-events-auto"
+                      aria-label="Select video quality"
+                      style={{ fontWeight: 400, letterSpacing: ".01em" }}
+                    >
+                      {quality}
+                      <svg width={16} height={12} fill="none" viewBox="0 0 16 16" className="inline-block ml-1">
+                        <path d="M4 6l4 4 4-4" stroke="#fff" strokeWidth={2} strokeLinecap="round"/>
+                      </svg>
+                    </button>
+                    {showQualityMenu && (
+                      <div className="absolute right-0 bottom-full mb-2 bg-[#211C29EF] shadow-xl rounded w-28 text-left border border-[#fff2] overflow-hidden z-40"
+                        style={{fontSize: 14}}>
+                        {qualityOptions.map((option) => (
+                          <button
+                            key={option}
+                            onClick={() => {
+                              setQuality(option);
+                              setShowQualityMenu(false);
+                            }}
+                            className={`px-4 py-2 w-full block hover:bg-accent-red/70 text-white transition-all duration-150 text-left ${quality === option ? "bg-accent-red text-white font-semibold" : ""}`}
+                            style={{ letterSpacing: 0.03 }}
+                          >{option}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* Fullscreen */}
+                  <button
+                    onClick={toggleFullscreen}
+                    className="rounded-full bg-white/15 hover:bg-accent-blue/70 focus:outline-none p-2 w-10 h-10 flex items-center justify-center transition"
+                    aria-label="Toggle fullscreen"
+                    title="Fullscreen"
+                  >
+                    <svg width="23" height="23" viewBox="0 0 24 24" fill="none">
+                      <rect x="3" y="3" width="6" height="2" rx="1" fill="#fff"/>
+                      <rect x="3" y="3" width="2" height="6" rx="1" fill="#fff"/>
+                      <rect x="15" y="3" width="6" height="2" rx="1" fill="#fff"/>
+                      <rect x="19" y="3" width="2" height="6" rx="1" fill="#fff"/>
+                      <rect x="3" y="19" width="6" height="2" rx="1" fill="#fff"/>
+                      <rect x="3" y="15" width="2" height="6" rx="1" fill="#fff"/>
+                      <rect x="15" y="19" width="6" height="2" rx="1" fill="#fff"/>
+                      <rect x="19" y="15" width="2" height="6" rx="1" fill="#fff"/>
                     </svg>
                   </button>
-
-                  {showQualityMenu && (
-                    <div
-                      className="absolute right-0 bottom-full mb-2 bg-secondary-bg border border-border-color shadow-xl overflow-hidden slide-in-right"
-                      style={{ borderRadius: '8px' }}
-                    >
-                      {qualityOptions.map((option) => (
-                        <button
-                          key={option}
-                          onClick={() => {
-                            setQuality(option);
-                            setShowQualityMenu(false);
-                          }}
-                          className={`block w-full text-left px-4 py-2 text-sm hover:bg-hover-bg transition-colors ${
-                            quality === option ? 'bg-accent-blue text-white' : 'text-text-primary'
-                          }`}
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
-
-                {/* Fullscreen */}
-                <button
-                  onClick={toggleFullscreen}
-                  className="p-2 text-white hover:text-accent-blue transition-colors hover-scale"
-                  style={{ borderRadius: '8px' }}
-                >
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                  </svg>
-                </button>
               </div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );
