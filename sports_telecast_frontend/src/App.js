@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
-import SportsFilter from './components/SportsFilter';
 import VideoPlayer from './components/VideoPlayer';
 import AnalyticsPanel from './components/AnalyticsPanel';
 import './App.css';
 
 // PUBLIC_INTERFACE
 function App() {
-  const [selectedSport, setSelectedSport] = useState('All');
   const [viewerCount, setViewerCount] = useState(12847);
   const [isLoading, setIsLoading] = useState(true);
   const [theme] = useState('dark');
@@ -32,12 +30,6 @@ function App() {
     }, 800);
     return () => clearTimeout(timer);
   }, []);
-
-  const handleSportChange = (sport) => {
-    setSelectedSport(sport);
-    // Add analytics tracking here if needed
-    console.log(`Sport changed to: ${sport}`);
-  };
 
   const LoadingScreen = () => (
     <div className="min-h-screen bg-primary-bg flex items-center justify-center">
@@ -85,9 +77,6 @@ function App() {
 
       {/* Main Content */}
       <div className="pt-16 relative z-10">
-        {/* Sports Filter */}
-        <SportsFilter selectedSport={selectedSport} onSportChange={handleSportChange} />
-        
         {/* Video/Analytics Section */}
         <div className="max-w-7xl mx-auto p-4 sm:p-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
