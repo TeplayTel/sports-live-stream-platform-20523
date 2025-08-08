@@ -60,10 +60,24 @@ const Header = ({ viewerCount }) => {
           
           {/* User Profile */}
           <div className="relative group">
-            <button className="w-10 h-10 bg-gradient-accent rounded-lg flex items-center justify-center text-sm font-bold text-white hover-scale transition-all duration-200 hover-glow">
-              U
+            <button
+              className="w-10 h-10 bg-gradient-accent rounded-full outline-none shadow-lg flex items-center justify-center text-xl font-bold text-white hover-scale hover-glow transition-all duration-200 focus:ring-2 focus:ring-accent-blue"
+              aria-label="User profile"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                letterSpacing: 0.8,
+                border: "2.5px solid #f5576c90",
+                boxShadow: "0 0 14px #f5576c44"
+              }}
+              tabIndex={0}
+            >
+              <svg width="25" height="25" fill="none" aria-hidden="true" viewBox="0 0 25 25">
+                <circle cx="12.5" cy="8.5" r="5.5" fill="#fff" fillOpacity="0.9" />
+                <ellipse cx="12.5" cy="18" rx="8.5" ry="6" fill="#fff" fillOpacity="0.6" />
+              </svg>
             </button>
-            <div className="absolute inset-0 bg-gradient-accent rounded-lg blur opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
+            {/* Drop-down (future): <div>...</div> */}
+            <div className="absolute inset-0 bg-gradient-accent rounded-full blur opacity-30 group-hover:opacity-60 transition-opacity duration-300 pointer-events-none"></div>
           </div>
         </div>
       </div>

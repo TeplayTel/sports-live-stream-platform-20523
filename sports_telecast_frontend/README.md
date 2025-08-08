@@ -5,7 +5,7 @@ This project provides a minimal React template with a clean, modern UI and minim
 ## Features
 
 - **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
+- **Modern UI**: Clean, Netflix-inspired dark theme UI with premium streaming-app feel
 - **Fast**: Minimal dependencies for quick loading times
 - **Simple**: Easy to understand and modify
 

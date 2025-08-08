@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import VideoPlayer from './components/VideoPlayer';
 import AnalyticsPanel from './components/AnalyticsPanel';
+import MatchInfoSection from './components/MatchInfoSection';
 import './App.css';
 
 // PUBLIC_INTERFACE
@@ -83,7 +84,25 @@ function App() {
             {/* Main Video Area */}
             <div className="lg:col-span-8 space-y-6">
               <div className="slide-in-left">
-                <VideoPlayer />
+                <VideoPlayer currentMatch={{
+                  matchId: "123",
+                  homeTeam: 'Arsenal', homeScore: 2, awayTeam: 'Chelsea', awayScore: 1,
+                  status: 'LIVE', time: "67'", competition: 'Premier League',
+                  homeLogo: "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
+                  awayLogo: "https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg"
+                }} />
+                {/* Premium compact MatchInfoSection: Netflix-inspired */}
+                <MatchInfoSection match={{
+                  homeTeam: 'Arsenal',
+                  homeScore: 2,
+                  awayTeam: 'Chelsea',
+                  awayScore: 1,
+                  status: 'LIVE',
+                  time: "67'",
+                  competition: 'Premier League',
+                  homeLogo: "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
+                  awayLogo: "https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg"
+                }} />
               </div>
             </div>
 
@@ -95,8 +114,6 @@ function App() {
             </div>
           </div>
         </div>
-        {/* Sports Matches section, Match Cards, and summaries REMOVED */}
-
         {/* Footer */}
         <footer className="mt-16 bg-secondary-bg border-t border-border-color">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
