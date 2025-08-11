@@ -3,9 +3,10 @@ import React from "react";
 /**
  * MatchInfoSection
  *
- * Displays home/away team names (and their logos if provided) along with the score, in a compact, modern horizontal layout.
- * - Team name and logo left, score center, team name and logo right (mirrored)
- * - Accepts prop: match { homeTeam, awayTeam, homeLogo, awayLogo, homeScore, awayScore }, but falls back to "Home"/"Away", 0:0 if not supplied
+ * Displays home/away team names (and their logos if provided) along with the score,
+ * in a strictly horizontal, minimalist layout matching the full width and height of the main player.
+ * Score is plain text (no box/border/background), matching the new requirements.
+ * Layout: [Logo][Team name]    [SCORE]   [Team name][Logo] -- all aligned center.
  */
 
 // PUBLIC_INTERFACE
@@ -16,27 +17,36 @@ const MatchInfoSection = ({ match }) => {
   const homeLogo = match?.homeLogo || "";
   const awayLogo = match?.awayLogo || "";
   // The task says to display 0:0
-  const homeScore = 0; // match?.homeScore ?? 0
-  const awayScore = 0; // match?.awayScore ?? 0
+  const homeScore = 0;
+  const awayScore = 0;
 
+  // Inline styles and layout tokens for VideoPlayer width/height matching
   return (
     <section
       aria-label={`Match info: ${homeTeam} vs ${awayTeam} — Score ${homeScore} to ${awayScore}`}
-      className="mx-auto mt-7 mb-8 w-full max-w-md min-w-[220px] rounded-xl flex items-center justify-center shadow-xl bg-[rgba(23,20,34,0.94)]"
+      // Use full width, no maxWidth constraint, match aspect ratio (keep it flat in height, stretch in width)
+      className="w-full flex items-center justify-center mx-auto mt-6 mb-8 px-0"
       style={{
-        border: "1.5px solid #fff1",
-        boxShadow: "0 4px 28px #0009, 0 1.5px 8px #2228",
-        backdropFilter: "blur(14px)",
-        minHeight: 80,
-        minWidth: 180,
-        maxWidth: 380,
+        minHeight: 56,
+        height: 68,
+        maxHeight: 100, // 80-100px per design notes
+        width: "100%",
+        background: "var(--primary-bg, #0a0e27)",
+        borderRadius: "8px",
+        padding: "0 16px",
         fontFamily: "var(--font-primary), Inter, sans-serif",
-        padding: "14px 18px",
-        gap: 0,
+        border: "none",
+        boxShadow: "none"
       }}
     >
-      {/* Home team */}
-      <div className="team-section flex flex-col items-center min-w-[74px] max-w-[120px] flex-1">
+      {/* Home Team */}
+      <div
+        className="matchinfo-team flex items-center flex-1 min-w-0"
+        style={{
+          justifyContent: "flex-end",
+        }}
+      >
+        {/* Logo or Letter */}
         {homeLogo ? (
           <img
             src={homeLogo}
@@ -45,32 +55,36 @@ const MatchInfoSection = ({ match }) => {
             style={{
               width: 40,
               height: 40,
+              minWidth: 40,
+              minHeight: 40,
               borderRadius: "50%",
               objectFit: "cover",
-              marginBottom: 7,
               background: "#222",
-              border: "2.5px solid #fff3",
-              boxShadow: "0 2px 10px #13131d44",
+              marginRight: 12,
+              border: "2px solid #222",
+              boxShadow: "0 1px 3px #13131d33"
             }}
           />
         ) : (
           <div
             className="team-logo flex items-center justify-center"
+            aria-label={`${homeTeam} logo`}
             style={{
               width: 40,
               height: 40,
+              minWidth: 40,
+              minHeight: 40,
               borderRadius: "50%",
               background: "#222",
-              marginBottom: 7,
-              border: "2.5px solid #fff1",
+              marginRight: 12,
+              border: "2px solid #333",
               color: "#fff7",
-              fontSize: 17,
+              fontSize: 18,
               fontWeight: 700,
               letterSpacing: 1,
               textAlign: "center",
-              boxShadow: "0 2px 10px #13131d44",
+              boxShadow: "0 1px 3px #13131d33"
             }}
-            aria-label={`${homeTeam} logo`}
           >
             {homeTeam[0] ? homeTeam[0].toUpperCase() : "H"}
           </div>
@@ -78,28 +92,29 @@ const MatchInfoSection = ({ match }) => {
         <span
           className="team-name"
           style={{
-            color: "var(--text-secondary,#e0e0e0)",
+            color: "var(--text-secondary, #b8c5d6)",
             fontFamily: "var(--font-primary), Inter, sans-serif",
-            fontSize: 14,
-            fontWeight: 400,
+            fontSize: 15,
+            fontWeight: 500,
             textTransform: "capitalize",
-            letterSpacing: "0.3px",
-            textAlign: "center"
+            letterSpacing: "0.4px",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+            overflow: "hidden",
+            textAlign: "right",
+            maxWidth: 108
           }}
         >
           {homeTeam}
         </span>
       </div>
-      {/* Score Section */}
+
+      {/* Score Section - just text, no box, border, or background */}
       <div
-        className="score-section flex items-center justify-center mx-7 px-5 py-2 rounded-md"
+        className="score-section flex items-center justify-center mx-7"
         style={{
-          background: "#18151e",
-          borderRadius: 6,
-          border: "1.5px solid #333b",
-          boxShadow: "0 1.5px 8px #111b",
-          margin: "0 24px",
-          minWidth: 68,
+          margin: "0 32px",
+          minWidth: 72,
           fontFamily: "var(--font-mono), JetBrains Mono, monospace",
         }}
       >
@@ -107,18 +122,48 @@ const MatchInfoSection = ({ match }) => {
           className="score-text select-none"
           aria-label={`Score: ${homeScore} to ${awayScore}`}
           style={{
-            color: "var(--text-primary,#fff)",
-            fontSize: 34,
+            color: "var(--text-primary, #fff)",
+            fontSize: 36,
             fontWeight: 700,
             letterSpacing: "2.5px",
-            textShadow: "0 2px 12px #0006, 0 1px 1px #222b"
+            textShadow: "0 1px 6px #0007",
+            background: "none",
+            border: "none",
+            borderRadius: "0",
+            padding: 0,
+            margin: 0
           }}
         >
           {homeScore}:{awayScore}
         </span>
       </div>
-      {/* Away team */}
-      <div className="team-section flex flex-col items-center min-w-[74px] max-w-[120px] flex-1">
+
+      {/* Away Team */}
+      <div
+        className="matchinfo-team flex items-center flex-1 min-w-0"
+        style={{
+          justifyContent: "flex-start",
+        }}
+      >
+        <span
+          className="team-name"
+          style={{
+            color: "var(--text-secondary, #b8c5d6)",
+            fontFamily: "var(--font-primary), Inter, sans-serif",
+            fontSize: 15,
+            fontWeight: 500,
+            textTransform: "capitalize",
+            letterSpacing: "0.4px",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+            overflow: "hidden",
+            textAlign: "left",
+            maxWidth: 108,
+            marginRight: 12
+          }}
+        >
+          {awayTeam}
+        </span>
         {awayLogo ? (
           <img
             src={awayLogo}
@@ -127,50 +172,40 @@ const MatchInfoSection = ({ match }) => {
             style={{
               width: 40,
               height: 40,
+              minWidth: 40,
+              minHeight: 40,
               borderRadius: "50%",
               objectFit: "cover",
-              marginBottom: 7,
               background: "#222",
-              border: "2.5px solid #fff3",
-              boxShadow: "0 2px 10px #13131d44",
+              marginLeft: 0,
+              border: "2px solid #222",
+              boxShadow: "0 1px 3px #13131d33"
             }}
           />
         ) : (
           <div
             className="team-logo flex items-center justify-center"
+            aria-label={`${awayTeam} logo`}
             style={{
               width: 40,
               height: 40,
+              minWidth: 40,
+              minHeight: 40,
               borderRadius: "50%",
               background: "#222",
-              marginBottom: 7,
-              border: "2.5px solid #fff1",
+              marginLeft: 0,
+              border: "2px solid #333",
               color: "#fff7",
-              fontSize: 17,
+              fontSize: 18,
               fontWeight: 700,
               letterSpacing: 1,
               textAlign: "center",
-              boxShadow: "0 2px 10px #13131d44",
+              boxShadow: "0 1px 3px #13131d33"
             }}
-            aria-label={`${awayTeam} logo`}
           >
             {awayTeam[0] ? awayTeam[0].toUpperCase() : "A"}
           </div>
         )}
-        <span
-          className="team-name"
-          style={{
-            color: "var(--text-secondary,#e0e0e0)",
-            fontFamily: "var(--font-primary), Inter, sans-serif",
-            fontSize: 14,
-            fontWeight: 400,
-            textTransform: "capitalize",
-            letterSpacing: "0.3px",
-            textAlign: "center"
-          }}
-        >
-          {awayTeam}
-        </span>
       </div>
     </section>
   );
