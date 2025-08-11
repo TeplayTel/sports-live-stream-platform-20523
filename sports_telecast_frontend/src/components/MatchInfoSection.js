@@ -134,19 +134,7 @@ const MatchInfoSection = ({
         />
       </div>
 
-      {/* Competition badge, right-aligned on large screens */}
-      <div className="hidden sm:flex flex-col items-end ml-6">
-        <span
-          className="competition-badge px-3 py-1 rounded-full text-xs font-semibold"
-          style={{
-            background: "var(--accent-blue)",
-            color: "#fff",
-            letterSpacing: 1.1,
-            marginBottom: 2,
-            boxShadow: "0 0 8px #2196f380"
-          }}
-        >{match.competition || ""}</span>
-      </div>
+      {/* Competition badge removed as per requirement */}
     </section>
   );
 };
