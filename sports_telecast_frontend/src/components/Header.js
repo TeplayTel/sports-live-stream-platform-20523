@@ -24,15 +24,15 @@ const Header = ({ viewerCount }) => {
         <div className="flex items-center space-x-3 group">
           <div className="relative">
             <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-              <span className="text-white font-bold text-lg">⚡</span>
+              <span className="text-white font-bold text-lg" aria-label="Fan Engagement Live" title="Fan Engagement Live">🏟️</span>
             </div>
             <div className="absolute inset-0 bg-gradient-primary rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
           </div>
           <div className="hidden sm:block">
             <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              SportsStream
+              Fan Engagement Live
             </h1>
-            <p className="text-xs text-text-muted">Live Sports Hub</p>
+            <p className="text-xs text-text-muted">Engage with Sports, Live!</p>
           </div>
         </div>
         

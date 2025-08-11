@@ -20,6 +20,11 @@ function App() {
     }
   }, [user]);
 
+  // Set page/document title
+  useEffect(() => {
+    document.title = 'Fan Engagement Live';
+  }, []);
+
   // Simulate real-time viewer count updates
   useEffect(() => {
     const interval = setInterval(() => {
@@ -46,15 +51,15 @@ function App() {
       <div className="text-center space-y-6">
         <div className="relative">
           <div className="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto">
-            <span className="text-3xl">⚡</span>
+            <span className="text-3xl" aria-label="Fan Engagement Live" title="Fan Engagement Live">🏟️</span>
           </div>
           <div className="absolute inset-0 bg-gradient-primary rounded-2xl blur-lg opacity-50 animate-pulse"></div>
         </div>
         <div className="space-y-2">
           <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            SportsStream
+            Fan Engagement Live
           </h2>
-          <p className="text-text-secondary">Loading your premium sports experience...</p>
+          <p className="text-text-secondary">Loading your interactive sports experience...</p>
         </div>
         <div className="flex space-x-1 justify-center">
           {[0, 1, 2].map((i) => (
@@ -96,24 +101,24 @@ function App() {
                 <VideoPlayer
                   currentMatch={{
                     matchId: "123",
-                    homeTeam: 'Arsenal', homeScore: 2, awayTeam: 'Chelsea', awayScore: 1,
-                    status: 'LIVE', time: "67'", competition: 'Premier League',
-                    homeLogo: "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
-                    awayLogo: "https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg"
+                    homeTeam: 'Home', homeScore: 0, awayTeam: 'Away', awayScore: 0,
+                    status: 'LIVE', time: "67'", competition: 'Fan Event',
+                    homeLogo: "",
+                    awayLogo: ""
                   }}
                   user={user}
                 />
                 {/* Premium compact MatchInfoSection: Netflix-inspired */}
                 <MatchInfoSection match={{
-                  homeTeam: 'Arsenal',
-                  homeScore: 2,
-                  awayTeam: 'Chelsea',
-                  awayScore: 1,
+                  homeTeam: 'Home',
+                  homeScore: 0,
+                  awayTeam: 'Away',
+                  awayScore: 0,
                   status: 'LIVE',
                   time: "67'",
-                  competition: 'Premier League',
-                  homeLogo: "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
-                  awayLogo: "https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg"
+                  competition: 'Fan Event',
+                  homeLogo: "",
+                  awayLogo: ""
                 }} />
               </div>
             </div>
@@ -133,18 +138,17 @@ function App() {
               <div className="col-span-1 md:col-span-2">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">⚡</span>
+                    <span className="text-white font-bold text-lg" aria-label="Fan Engagement Live" title="Fan Engagement Live">🏟️</span>
                   </div>
                   <div>
                     <h3 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                      SportsStream
+                      Fan Engagement Live
                     </h3>
-                    <p className="text-sm text-text-muted">Premium Sports Experience</p>
+                    <p className="text-sm text-text-muted">Interactive Sports Platform</p>
                   </div>
                 </div>
                 <p className="text-text-secondary text-sm leading-relaxed">
-                  Experience sports like never before with premium streaming, real-time analytics, 
-                  and interactive features that bring you closer to the action.
+                  Experience sports like never before—join live events, interact with fans, and engage with your favorite teams all in one place!
                 </p>
               </div>
               
@@ -162,7 +166,7 @@ function App() {
                 <ul className="space-y-2 text-sm text-text-secondary">
                   <li><button className="hover:text-accent-blue transition-colors text-left">Live Streaming</button></li>
                   <li><button className="hover:text-accent-blue transition-colors text-left">Real-time Stats</button></li>
-                  <li><button className="hover:text-accent-blue transition-colors text-left">Match Analysis</button></li>
+                  <li><button className="hover:text-accent-blue transition-colors text-left">Fan Chat</button></li>
                   <li><button className="hover:text-accent-blue transition-colors text-left">Highlights</button></li>
                 </ul>
               </div>
@@ -170,7 +174,7 @@ function App() {
 
             <div className="border-t border-border-color mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
               <p className="text-text-muted text-sm">
-                © 2024 SportsStream. All rights reserved.
+                © 2024 Fan Engagement Live. All rights reserved.
               </p>
               <div className="flex items-center space-x-6 mt-4 sm:mt-0">
                 <button className="text-text-muted hover:text-accent-blue transition-colors">Privacy</button>
