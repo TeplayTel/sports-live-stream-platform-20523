@@ -133,55 +133,55 @@ function App() {
           </div>
         </div>
         {/* Footer */}
-        <footer className="mt-16 bg-secondary-bg border-t border-border-color">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div className="col-span-1 md:col-span-2">
+        <footer className="mt-16 bg-secondary-bg/90 border-t border-border-color glass-morphism shadow-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+            <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-8 md:gap-20">
+              {/* Brand and Mission */}
+              <div className="flex flex-col items-center md:items-start md:w-1/2">
                 <div className="flex items-center space-x-3 mb-4">
-                  {/* Remove bg-gradient-primary from footer logo */}
-                  <div className="w-10 h-10 bg-transparent border border-border-color rounded-xl flex items-center justify-center shadow">
-                    <span className="text-white font-bold text-lg" aria-label="Fan Engagement Live" title="Fan Engagement Live">🏟️</span>
+                  <div className="w-11 h-11 bg-transparent border border-border-color rounded-xl flex items-center justify-center shadow">
+                    <span className="text-white font-bold text-2xl" aria-label="Fan Engagement Live" title="Fan Engagement Live">🏟️</span>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">
-                      Fan Engagement Live
-                    </h3>
-                    <p className="text-sm text-text-muted">Interactive Sports Platform</p>
-                  </div>
+                  <span>
+                    <h3 className="text-2xl font-bold text-white leading-snug">Fan Engagement Live</h3>
+                    <p className="text-sm text-text-muted leading-tight">Where Fans & Sports Connect — Instantly</p>
+                  </span>
                 </div>
-                <p className="text-text-secondary text-sm leading-relaxed">
-                  Experience sports like never before—join live events, interact with fans, and engage with your favorite teams all in one place!
+                <p className="text-text-secondary text-base leading-relaxed font-medium max-w-md pt-2">
+                  Your modern platform for interactive sports — Join streams, react live, and amplify your fan voice. Made for the next generation of engagement.
                 </p>
               </div>
-              
-              <div>
-                <h4 className="font-semibold text-text-primary mb-4">Sports</h4>
-                <ul className="space-y-2 text-sm text-text-secondary">
-                  <li><button className="hover:text-accent-blue transition-colors text-left">Football</button></li>
-                  <li><button className="hover:text-accent-blue transition-colors text-left">Basketball</button></li>
-                  <li><button className="hover:text-accent-blue transition-colors text-left">Tennis</button></li>
-                  <li><button className="hover:text-accent-blue transition-colors text-left">Baseball</button></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold text-text-primary mb-4">Features</h4>
-                <ul className="space-y-2 text-sm text-text-secondary">
-                  <li><button className="hover:text-accent-blue transition-colors text-left">Live Streaming</button></li>
-                  <li><button className="hover:text-accent-blue transition-colors text-left">Real-time Stats</button></li>
-                  <li><button className="hover:text-accent-blue transition-colors text-left">Fan Chat</button></li>
-                  <li><button className="hover:text-accent-blue transition-colors text-left">Highlights</button></li>
-                </ul>
+              {/* Navigation/Links */}
+              <div className="flex flex-col items-center md:items-end gap-6">
+                <nav className="flex flex-col md:items-end gap-2 text-text-muted text-sm font-semibold">
+                  <a href="#" className="hover:text-accent-blue transition-colors">Home</a>
+                  <a href="#" className="hover:text-accent-blue transition-colors">Upcoming Events</a>
+                  <a href="#" className="hover:text-accent-blue transition-colors">Highlights</a>
+                  <a href="#" className="hover:text-accent-blue transition-colors">Contact</a>
+                  <a href="#" className="hover:text-accent-blue transition-colors">Support</a>
+                </nav>
+                {/* Social Media Icons */}
+                <div className="flex items-center space-x-4 mt-3">
+                  <a href="https://twitter.com/" className="text-text-muted hover:text-accent-blue transition-colors" aria-label="Twitter" target="_blank" rel="noopener noreferrer">
+                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.534C19.23 3.116 18.1 2.55 17 2.55c-2.19 0-3.98 1.726-3.98 3.857 0 .302.03.597.09.877-3.31-.165-6.243-1.68-8.201-4.006-.363.605-.57 1.31-.57 2.063 0 1.425.781 2.68 1.973 3.417A3.92 3.92 0 012 6.74v.052c0 1.99 1.496 3.654 3.482 4.029A4.078 4.078 0 012 11.1c.26.75.988 1.3 1.86 1.317A8.273 8.273 0 013 13.12c-1.06.693-2.42 1.102-3.94.914C1.65 15.136 3.62 15.7 5.66 15.7c8.45 0 13.078-6.698 13.078-12.515 0-.19-.004-.376-.013-.562A9.14 9.14 0 0023 3z" fill="currentColor"/></svg>
+                  </a>
+                  <a href="https://facebook.com/" className="text-text-muted hover:text-accent-blue transition-colors" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
+                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M22 12c0-5.522-4.477-10-10-10S2 6.478 2 12c0 5.018 3.676 9.157 8.438 9.877v-6.987H7.898v-2.89h2.54V9.845c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.634.772-1.634 1.562v1.904h2.773l-.443 2.89h-2.33v6.986C18.324 21.157 22 17.018 22 12z" fill="currentColor"/></svg>
+                  </a>
+                  <a href="https://youtube.com/" className="text-text-muted hover:text-accent-blue transition-colors" aria-label="YouTube" target="_blank" rel="noopener noreferrer">
+                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M21.8 8.001A2.828 2.828 0 0020.045 6.2C18.249 5.6 12 5.6 12 5.6s-6.247 0-8.045.601A2.828 2.828 0 002.2 8.001C1.6 9.798 1.6 12.001 1.6 12.001s0 2.204.601 4.001A2.829 2.829 0 003.955 17.8c1.798.6 8.045.6 8.045.6s6.249 0 8.045-.6a2.828 2.828 0 001.755-1.8C22.4 14.205 22.4 12 22.4 12s0-2.204-.6-4.001zM9.75 15.101V8.901l6.389 3.1-6.389 3.1z" fill="currentColor"/></svg>
+                  </a>
+                </div>
               </div>
             </div>
-
-            <div className="border-t border-border-color mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
+            {/* Divider */}
+            <div className="border-t border-border-color mt-10 pt-5 flex flex-col sm:flex-row justify-between items-center">
               <p className="text-text-muted text-sm">
-                © 2024 Fan Engagement Live. All rights reserved.
+                © 2024 Fan Engagement Live. Made with <span className="text-accent-red">♥</span> for sports fans everywhere.
               </p>
               <div className="flex items-center space-x-6 mt-4 sm:mt-0">
-                <button className="text-text-muted hover:text-accent-blue transition-colors">Privacy</button>
-                <button className="text-text-muted hover:text-accent-blue transition-colors">Terms</button>
-                <button className="text-text-muted hover:text-accent-blue transition-colors">Support</button>
+                <a href="#" className="text-text-muted hover:text-accent-blue transition-colors">Privacy Policy</a>
+                <a href="#" className="text-text-muted hover:text-accent-blue transition-colors">Terms of Use</a>
               </div>
             </div>
           </div>
