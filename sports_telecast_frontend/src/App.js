@@ -50,13 +50,14 @@ function App() {
     <div className="min-h-screen bg-primary-bg flex items-center justify-center">
       <div className="text-center space-y-6">
         <div className="relative">
-          <div className="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto">
+          {/* Remove violet/purple bg from loading logo, use border only */}
+          <div className="w-20 h-20 bg-transparent border-2 border-border-color rounded-2xl flex items-center justify-center mx-auto shadow">
             <span className="text-3xl" aria-label="Fan Engagement Live" title="Fan Engagement Live">🏟️</span>
           </div>
-          <div className="absolute inset-0 bg-gradient-primary rounded-2xl blur-lg opacity-50 animate-pulse"></div>
+          {/* Remove gradient overlay */}
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <h2 className="text-2xl font-bold text-white">
             Fan Engagement Live
           </h2>
           <p className="text-text-secondary">Loading your interactive sports experience...</p>
@@ -137,11 +138,12 @@ function App() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div className="col-span-1 md:col-span-2">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
+                  {/* Remove bg-gradient-primary from footer logo */}
+                  <div className="w-10 h-10 bg-transparent border border-border-color rounded-xl flex items-center justify-center shadow">
                     <span className="text-white font-bold text-lg" aria-label="Fan Engagement Live" title="Fan Engagement Live">🏟️</span>
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    <h3 className="text-xl font-bold text-white">
                       Fan Engagement Live
                     </h3>
                     <p className="text-sm text-text-muted">Interactive Sports Platform</p>
