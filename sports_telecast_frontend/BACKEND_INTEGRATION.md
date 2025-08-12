@@ -110,3 +110,66 @@ The integration has been tested and verified:
 5. **Real-time Updates**: All connected clients see live reaction updates
 
 The implementation maintains the premium user experience while providing real backend integration with comprehensive error handling and loading states.
+
+## Emoji Upload API (Admin)
+
+Endpoint:
+- POST /fan-engagement/emoji/v1/upload
+
+Authorization:
+- Requires admin token in the Authorization header
+- Use Authorization: Bearer admin for sample/local usage
+
+JavaScript (fetch) example:
+```js
+// Example: uploading a new emoji asset
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const fileInput = document.querySelector('#emoji-file');
+
+async function uploadEmoji() {
+  if (!fileInput.files?.[0]) {
+    alert('Select a file first');
+    return;
+  }
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);           // required
+  formData.append('name', 'Fire');                       // optional
+  formData.append('emojiType', 'fire');                  // optional
+  formData.append('isActive', 'true');                   // optional
+  formData.append('sortOrder', '5');                     // optional
+
+  const res = await fetch(`${apiUrl}/fan-engagement/emoji/v1/upload`, {
+    method: 'POST',
+    headers: {
+      // IMPORTANT: Authorization must be present for upload
+      Authorization: 'Bearer admin',
+      // Do NOT set Content-Type for FormData; the browser will set it
+    },
+    body: formData,
+  });
+
+  const json = await res.json();
+  console.log('Upload result:', json);
+}
+```
+
+cURL example:
+```bash
+curl -X POST "${REACT_APP_API_URL:-http://localhost:8000}/fan-engagement/emoji/v1/upload" \
+  -H "Authorization: Bearer admin" \
+  -F "file=@/path/to/emoji.png" \
+  -F "name=Fire" \
+  -F "emojiType=fire" \
+  -F "isActive=true" \
+  -F "sortOrder=5"
+```
+
+Note:
+- For React usage, you can also call the helper service: emojiService.uploadEmoji(file, { name, emojiType, isActive, sortOrder }).
+- The service defaults to token 'admin'. Override with REACT_APP_EMOJI_UPLOAD_TOKEN or emojiService.setToken('<your-token>') if needed.
+
+Environment variables (optional additions):
+```bash
+# Optional: override default token used for uploads
+REACT_APP_EMOJI_UPLOAD_TOKEN=admin
+```

@@ -1,4 +1,4 @@
-// PUBLIC_INTERFACE
+ // PUBLIC_INTERFACE
 /**
  * Emoji service for backend API integration
  * Handles emoji reactions, fetching available emojis, and event summaries
@@ -7,7 +7,12 @@
 class EmojiService {
   constructor() {
     this.apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-    this.token = null;
+    /**
+     * Default token for ADMIN upload operations.
+     * Can be overridden via REACT_APP_EMOJI_UPLOAD_TOKEN environment variable
+     * or at runtime via setToken(). By default set to 'admin' to match sample usage.
+     */
+    this.token = process.env.REACT_APP_EMOJI_UPLOAD_TOKEN || 'admin';
   }
 
   // Set authentication token
@@ -15,7 +20,7 @@ class EmojiService {
     this.token = token;
   }
 
-  // Get authorization headers
+  // Get authorization headers for JSON-based requests
   getHeaders(userId = null, username = null) {
     // Try to use window.mockUser if available, else parameters
     let mockUserId = userId, mockUsername = username;
@@ -29,6 +34,31 @@ class EmojiService {
 
     const headers = {
       'Content-Type': 'application/json',
+      'X-Mock-User-Id': mockUserId,
+      'X-Mock-Username': mockUsername,
+    };
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    return headers;
+  }
+
+  /**
+   * Build headers for multipart upload (FormData).
+   * Intentionally does not set Content-Type so browser sets proper multipart boundary.
+   */
+  getUploadHeaders(userId = null, username = null) {
+    // Try to use window.mockUser if available, else parameters
+    let mockUserId = userId, mockUsername = username;
+    if ((!mockUserId || !mockUsername) && typeof window !== 'undefined' && window.mockUser) {
+      const user = window.mockUser;
+      if (!mockUserId && user && user.user_id) mockUserId = user.user_id;
+      if (!mockUsername && user && user.username) mockUsername = user.username;
+    }
+    if (!mockUserId) mockUserId = 'mock-user-001';
+    if (!mockUsername) mockUsername = 'mockfan';
+
+    const headers = {
       'X-Mock-User-Id': mockUserId,
       'X-Mock-Username': mockUsername,
     };
@@ -138,6 +168,44 @@ class EmojiService {
       return await this.handleResponse(response);
     } catch (error) {
       console.error('Error fetching event reactions:', error);
+      throw error;
+    }
+  }
+
+  // PUBLIC_INTERFACE
+  /**
+   * Upload a new emoji asset (admin operation).
+   * Uses multipart/form-data and requires Authorization: Bearer <token>.
+   * By default, this service uses token 'admin' (override with REACT_APP_EMOJI_UPLOAD_TOKEN or setToken()).
+   *
+   * @param {File|Blob} file - The emoji image file to upload
+   * @param {Object} options - Optional fields for metadata
+   * @param {string} [options.name] - Display name of the emoji
+   * @param {string} [options.emojiType] - Emoji type key (e.g., 'heart', 'laugh', ...)
+   * @param {boolean} [options.isActive] - Whether the emoji is active
+   * @param {number} [options.sortOrder] - Sorting order
+   * @returns {Promise<Object>} Upload response JSON
+   */
+  async uploadEmoji(file, options = {}) {
+    try {
+      const url = `${this.apiUrl}/fan-engagement/emoji/v1/upload`;
+      const formData = new FormData();
+
+      formData.append('file', file);
+      if (options.name) formData.append('name', options.name);
+      if (options.emojiType) formData.append('emojiType', options.emojiType);
+      if (typeof options.isActive === 'boolean') formData.append('isActive', String(options.isActive));
+      if (typeof options.sortOrder === 'number') formData.append('sortOrder', String(options.sortOrder));
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.getUploadHeaders(),
+        body: formData,
+      });
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error('Error uploading emoji:', error);
       throw error;
     }
   }
