@@ -71,42 +71,49 @@ class EmojiService {
 
   // PUBLIC_INTERFACE
   /**
-   * Submit an emoji reaction for a live event
+   * Submit an emoji reaction for a live event.
+   * Sends payload in required camelCase schema:
+   * {
+   *   "userId": string,
+   *   "eventId": string,
+   *   "emojiId": string,
+   *   "createdAt": string (ISO-8601)
+   * }
+   * Headers include 'Content-Type: application/json' and 'Authorization: Bearer <token>' if a token has been set via setToken().
+   *
    * @param {string} eventId - Event identifier
-   * @param {string} emojiId - Emoji identifier
-   * @param {string} userId - Mock user identifier (optional; if not supplied will use default)
-   * @param {object} userData - Mock user data (optional)
+   * @param {string} emojiId - Emoji identifier (may be provided as snake_case from callers; this function normalizes)
+   * @param {string|null} userId - Optional user id; if not provided, attempts to read from window.mockUser.user_id
    * @returns {Promise<Object>} Reaction response
    */
-  async submitReaction(eventId, emojiId, userId = null, userData = null) {
+  async submitReaction(eventId, emojiId, userId = null) {
     try {
-      // Try to use window.mockUser or pass userId/userData if provided (so that context-integrated APIs work)
-      let mockUserId = userId;
-      let mockUser = userData;
-      // Check if window.mockUser is available (from React context integration via a global, see App.js usage below)
-      if (!mockUserId && typeof window !== 'undefined' && window.mockUser && window.mockUser.user_id) {
-        mockUserId = window.mockUser.user_id;
-        mockUser = window.mockUser;
+      // Resolve userId from explicit arg or global mock
+      let resolvedUserId = userId;
+      if (!resolvedUserId && typeof window !== 'undefined' && window.mockUser && (window.mockUser.user_id || window.mockUser.userId)) {
+        resolvedUserId = window.mockUser.user_id || window.mockUser.userId;
       }
-      if (!mockUserId) mockUserId = 'mock-user-001';
+      if (!resolvedUserId) resolvedUserId = 'mock-user-001';
+
+      // Normalize IDs that may arrive in snake_case from callers
+      const normalizedEmojiId = emojiId;
 
       const url = `${this.apiUrl}/fan-engagement/emoji/v1/userEmojiReaction`;
+
+      // Construct backend-required camelCase payload with only allowed fields
       const body = {
-        event_id: eventId,
-        emoji_id: emojiId,
-        created_at: new Date().toISOString(),
-        user_id: mockUserId, // Add mock userId property for all POSTs
-        user_data: mockUser, // Optionally include userData for backend debug/development
+        userId: String(resolvedUserId),
+        eventId: String(eventId),
+        emojiId: String(normalizedEmojiId),
+        createdAt: new Date().toISOString(),
       };
 
-      // Remove undefined/nulls
-      Object.keys(body).forEach(key => (body[key] == null) && delete body[key]);
       const response = await fetch(url, {
         method: 'POST',
-        headers: this.getHeaders(),
+        headers: this.getHeaders(), // includes Content-Type and Authorization (if token set)
         body: JSON.stringify(body),
       });
-      
+
       return await this.handleResponse(response);
     } catch (error) {
       console.error('Error submitting reaction:', error);
