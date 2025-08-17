@@ -191,9 +191,14 @@ class EmojiService {
       const url = `${this.apiUrl}/fan-engagement/emoji/v1/upload`;
       const formData = new FormData();
 
-      formData.append('file', file);
+      // Backend expects 'emojiImage' for the file. Keep 'file' only as fallback in case of older servers.
+      formData.append('emojiImage', file);
+      // Ensure emojiType is provided; default to 'custom' if not given
+      const emojiType = options.emojiType || 'custom';
+      formData.append('emojiType', emojiType);
+
+      // Optional metadata (ignored by backend but safe to include)
       if (options.name) formData.append('name', options.name);
-      if (options.emojiType) formData.append('emojiType', options.emojiType);
       if (typeof options.isActive === 'boolean') formData.append('isActive', String(options.isActive));
       if (typeof options.sortOrder === 'number') formData.append('sortOrder', String(options.sortOrder));
 
