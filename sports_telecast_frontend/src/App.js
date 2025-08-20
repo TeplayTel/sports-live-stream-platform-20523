@@ -3,6 +3,7 @@ import Header from './components/Header';
 import VideoPlayer from './components/VideoPlayer';
 import AnalyticsPanel from './components/AnalyticsPanel';
 import MatchInfoSection from './components/MatchInfoSection';
+import EmojiList from './components/EmojiList';
 import './App.css';
 import { useUser, MOCK_USER } from './UserContext';
 
@@ -121,6 +122,9 @@ function App() {
                   homeLogo: "",
                   awayLogo: ""
                 }} />
+                <div className="mt-4">
+                  <EmojiList />
+                </div>
               </div>
             </div>
 

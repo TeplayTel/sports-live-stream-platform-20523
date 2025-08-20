@@ -6,7 +6,7 @@
 
 class EmojiService {
   constructor() {
-    this.apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+    this.apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
     /**
      * Default token for ADMIN upload operations.
      * Can be overridden via REACT_APP_EMOJI_UPLOAD_TOKEN environment variable
