@@ -134,7 +134,6 @@ video::-webkit-media-controls {
   }
 }
 
-<<<<<<< HEAD
 /* Dynamic Arc Animation Base */
 @keyframes emoji-arc-base {
   0% { 
@@ -210,8 +209,7 @@ video::-webkit-media-controls {
     opacity: 0;
   }
 }
-=======
-=======
+
 /* Natural Flying Animation with Bezier Curves */
 @keyframes naturalFlyUp {
   0% {
@@ -323,7 +321,7 @@ video::-webkit-media-controls {
     transform: translateY(-4px);
   }
 }
->>>>>>> cga-cg908b179b
+
 
 /* Slide in from top animation */
 @keyframes slide-in-down {

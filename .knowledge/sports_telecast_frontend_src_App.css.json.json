@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-{"is_source_file": false, "format": "", "description": "", "external_files": [], "external_methods": [], "published": [], "classes": [], "methods": [], "calls": [], "search-terms": [], "state": 2, "file_id": 33, "knowledge_revision": 139, "git_revision": "206061792033c291d3ef76e11c3f54b58a066e61", "hash": "c5aebcc03e45946220dbbc1689bbb1e8", "format-version": 4, "code-base-name": "sports_telecast_frontend", "filename": "sports_telecast_frontend/src/App.css", "revision_history": [{"139": "206061792033c291d3ef76e11c3f54b58a066e61"}]}
-=======
+
 {"is_source_file": false, "format": "", "description": "", "external_files": [], "external_methods": [], "published": [], "classes": [], "methods": [], "calls": [], "search-terms": [], "state": 2, "file_id": 36, "knowledge_revision": 148, "git_revision": "e76e1d9c5da42e6ab99d4d166868f82a0de87512", "hash": "1c3b8f15e4f334101785b4d2a41a9277", "format-version": 4, "code-base-name": "sports_telecast_frontend", "filename": "sports_telecast_frontend/src/App.css", "revision_history": [{"148": "e76e1d9c5da42e6ab99d4d166868f82a0de87512"}]}
->>>>>>> cga-cg908b179b
+
