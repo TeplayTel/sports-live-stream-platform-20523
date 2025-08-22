@@ -35,7 +35,7 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [videoError, setVideoError] = useState(null);
   const [isBuffering, setIsBuffering] = useState(false);
-<<<<<<< HEAD
+
   const [availableEmojis, setAvailableEmojis] = useState([]);
   const [wsConnection, setWsConnection] = useState(null);
   
@@ -44,14 +44,14 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
     { 
       emoji: '❤️', 
       color: '#ff1744', 
-=======
+
 
   // Enhanced emoji configuration with sound frequencies and colors
   const emojis = [
     {
       emoji: '❤️',
       color: '#ff1744',
->>>>>>> cga-cg908b179b
+
       name: 'love',
       sound: { frequency: 523.25, type: 'sine', duration: 0.3 }, // C5 - warm, loving
       gradient: 'from-pink-500 via-red-500 to-rose-600'
@@ -182,7 +182,7 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
 
   // Load emoji data from API and setup WebSocket
   useEffect(() => {
-<<<<<<< HEAD
+
     const loadEmojis = async () => {
       if (!apiConnected || !currentMatch?.id) {
         setAvailableEmojis(defaultEmojis);
@@ -225,11 +225,11 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
   useEffect(() => {
     if (!apiConnected || !currentMatch?.id) {
       // Fallback to mock updates
-=======
+
     const connectWebSocket = () => {
       console.log('Connecting to mock WebSocket for reactions...');
 
->>>>>>> cga-cg908b179b
+
       const interval = setInterval(() => {
         const randomChange = Math.floor(Math.random() * 10) - 5;
         setGlobalReactionCount(prev => Math.max(0, prev + randomChange));
@@ -376,8 +376,8 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
     };
   }, [isPlaying]);
 
-<<<<<<< HEAD
-<<<<<<< HEAD
+
+
   const handleEmojiReaction = (emojiData) => {
     // Create dynamic flying emoji animation with randomized trajectory
     const trajectoryType = Math.random();
@@ -423,17 +423,17 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
       duration: 2500 + Math.random() * 1000, // 2.5-3.5s duration variation
       opacity: 0.9 + Math.random() * 0.1, // Slight opacity variation
     };
-=======
+
   // Enhanced emoji reaction handler with sound and improved animations
   const handleEmojiReaction = useCallback((emojiData) => {
-=======
+
   // Enhanced emoji reaction handler with API integration
   const handleEmojiReaction = useCallback(async (emojiData) => {
->>>>>>> cga-cg908b179b
+
     // Initialize audio on first interaction
     initializeAudio();
-<<<<<<< HEAD
->>>>>>> cga-cg908b179b
+
+
     
     // Play distinct sound for emoji with <50ms delay
     playEmojiSound(emojiData.sound);
@@ -449,12 +449,12 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
       }
     }
     
-=======
+
 
     // Play distinct sound for emoji with <50ms delay
     playEmojiSound(emojiData.sound);
 
->>>>>>> cga-cg908b179b
+
     // Create enhanced flying animations with natural arcs
     const numFlying = Math.random() > 0.65 ? 2 : 1; // 35% chance for double emoji
 
@@ -484,22 +484,22 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
         setFlyingReactions(prev => [...prev, newFlyingReaction]);
       }, newFlyingReaction.delay);
     }
-<<<<<<< HEAD
+
     
     // Update counts with smooth animation (local update for immediate feedback)
-=======
+
 
     // Update counts with smooth animation
->>>>>>> cga-cg908b179b
+
     setEmojiCounts(prev => ({
       ...prev,
       [emojiData.name]: (prev[emojiData.name] || 0) + 1
     }));
 
     setGlobalReactionCount(prev => prev + 1);
-<<<<<<< HEAD
+
     
-<<<<<<< HEAD
+
     // Remove flying emoji after animation with dynamic duration
     setTimeout(() => {
       setFlyingReactions(prev => prev.filter(r => r.id !== newFlyingReaction.id));
@@ -515,10 +515,10 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
       video.play();
     } else {
       video.pause();
-=======
-=======
 
->>>>>>> cga-cg908b179b
+
+
+
     // Enhanced cleanup
     setTimeout(() => {
       setFlyingReactions(prev => prev.filter(r =>
@@ -529,7 +529,7 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
     // Enhanced haptic feedback
     if (navigator.vibrate) {
       navigator.vibrate([50, 30, 50]); // Pattern for better feedback
->>>>>>> cga-cg908b179b
+
     }
 
     console.log(`🎵 ${emojiData.name} reaction with ${emojiData.sound.type} sound at ${emojiData.sound.frequency}Hz`);
@@ -610,9 +610,9 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
             left: 0
           }}
         />
-<<<<<<< HEAD
+
         
-<<<<<<< HEAD
+
         {/* Dynamic Flying Emoji Animations */}
         {flyingReactions.map((reaction) => {
           let animationName = 'emoji-fly';
@@ -752,10 +752,10 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 opacity: showEmojiBar ? 1 : (showControls ? 0.7 : 0),
                 transform: showEmojiBar ? 'scale(1)' : 'scale(0.95)'
-=======
-=======
 
->>>>>>> cga-cg908b179b
+
+
+
         {/* Loading Overlay */}
         {(isVideoLoading || isBuffering) && (
           <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-20">
@@ -853,8 +853,8 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
             <div 
               className="flex items-center justify-center flex-1"
               style={{ 
-<<<<<<< HEAD
-<<<<<<< HEAD
+
+
                 borderRadius: '28px',
                 padding: '16px 24px',
                 background: 'linear-gradient(135deg, rgba(0,0,0,0.75) 0%, rgba(20,20,20,0.85) 30%, rgba(40,40,40,0.90) 70%, rgba(0,0,0,0.75) 100%)',
@@ -865,10 +865,10 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
                   inset 0 -1px 0 rgba(0,0,0,0.2)
                 `,
                 backdropFilter: 'blur(24px) saturate(180%)'
->>>>>>> cga-cg908b179b
+
               }}
             >
-<<<<<<< HEAD
+
               {emojis.map((emoji, index) => (
                 <button
                   key={index}
@@ -948,7 +948,7 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
                   <span 
                     className="text-white/70 text-center leading-none mt-0.5"
                     style={{ fontSize: 'clamp(9px, 1vw, 11px)' }}
-=======
+
               {/* Subtle animated background */}
               <div 
                 className="absolute inset-0 opacity-20"
@@ -960,19 +960,19 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
               
               <div className="relative flex items-center gap-3">
                 {emojis.map((emoji, index) => (
-=======
+
                 padding: '12px 20px',
               }}
             >
                 {(availableEmojis.length > 0 ? availableEmojis : defaultEmojis).map((emoji, index) => (
->>>>>>> cga-cg908b179b
+
                   <button
                     key={index}
                     onClick={() => handleEmojiReaction(emoji)}
                     className="group relative transition-all duration-300 hover:scale-110 active:scale-95 p-2"
                     style={{ 
                       animationDelay: `${index * 0.08}s`,
-=======
+
                 display: 'flex', 
                 gap: '20px',
                 justifyContent: 'center',
@@ -1017,11 +1017,11 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
                       transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                       filter: `drop-shadow(0 0 6px ${emoji.color}60) brightness(1.1)`,
                       userSelect: 'none',
->>>>>>> cga-cg908b179b
+
                     }}
                     className="select-none"
                   >
-<<<<<<< HEAD
+
                     {/* Enhanced Emoji with Dynamic Glow */}
                     <div 
                       className="relative transition-all duration-400"
@@ -1060,7 +1060,7 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
                     </div>
                   </button>
                 ))}
-<<<<<<< HEAD
+
                 
                 {/* Premium Global Counter */}
                 <div className="flex flex-col items-center gap-2 ml-6 pl-6" style={{
@@ -1098,16 +1098,16 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
                       textTransform: 'uppercase',
                       letterSpacing: '1px'
                     }}
->>>>>>> cga-cg908b179b
+
                   >
                     reactions
                   </span>
                 </div>
               </div>
-=======
-=======
->>>>>>> cga-cg908b179b
-=======
+
+
+
+
                     {emoji.emoji}
                   </span>
                 </button>
@@ -1141,12 +1141,12 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
               >
                 {globalReactionCount.toLocaleString()}
               </span>
->>>>>>> cga-cg908b179b
+
             </div>
           </div>
         </div>
 
-<<<<<<< HEAD
+
         {/* Video Player Controls Container - Unified with emoji bar */}
         <div 
           className={`absolute bottom-0 left-0 right-0 z-30 transition-all duration-300 ${
@@ -1162,13 +1162,13 @@ const VideoPlayer = ({ currentMatch, apiConnected }) => {
         >
           <div className="bg-gradient-to-t from-black/95 via-black/70 to-transparent p-4 pt-8">
 
-=======
+
         {/* Video Player Controls Container */}
         <div className={`absolute bottom-0 left-0 right-0 z-30 transition-all duration-300 ${
           showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
         }`}>
           <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4">
->>>>>>> cga-cg908b179b
+
             {/* Progress Bar / Seekbar */}
             <div className="mb-4">
               <div
