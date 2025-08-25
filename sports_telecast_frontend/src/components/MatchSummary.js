@@ -3,6 +3,7 @@ import ApiService from '../services/api';
 
 // PUBLIC_INTERFACE
 const MatchSummary = ({ currentMatch, apiConnected }) => {
+  /** Match summary component showing events timeline, lineups and heat map. */
   const [activeSection, setActiveSection] = useState('events');
   const [events, setEvents] = useState([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
@@ -18,12 +19,12 @@ const MatchSummary = ({ currentMatch, apiConnected }) => {
 
       try {
         setIsLoadingEvents(true);
-        
+
         // Try to get match highlights which may contain event information
         const highlightsResponse = await ApiService.getHighlights(1, 10, currentMatch.id);
         if (highlightsResponse.highlights) {
           setHighlights(highlightsResponse.highlights);
-          
+
           // Generate events based on highlights and match data
           const generatedEvents = generateEventsFromMatch(currentMatch, highlightsResponse.highlights);
           setEvents(generatedEvents);
@@ -44,7 +45,7 @@ const MatchSummary = ({ currentMatch, apiConnected }) => {
   // Generate events based on current match state and highlights
   const generateEventsFromMatch = (match, highlights = []) => {
     const generatedEvents = [];
-    
+
     // Add goal events based on score
     if (match.homeScore > 0) {
       for (let i = 0; i < match.homeScore; i++) {
@@ -59,7 +60,7 @@ const MatchSummary = ({ currentMatch, apiConnected }) => {
         });
       }
     }
-    
+
     if (match.awayScore > 0) {
       for (let i = 0; i < match.awayScore; i++) {
         generatedEvents.push({
@@ -121,7 +122,7 @@ const MatchSummary = ({ currentMatch, apiConnected }) => {
       'Liverpool': ['Mohamed Salah', 'Sadio Mané', 'Roberto Firmino', 'Virgil van Dijk', 'Jordan Henderson'],
       'Manchester City': ['Erling Haaland', 'Kevin De Bruyne', 'Phil Foden', 'Riyad Mahrez', 'Bernardo Silva']
     };
-    
+
     const players = playerNames[teamName] || ['Player 1', 'Player 2', 'Player 3', 'Player 4', 'Player 5'];
     return players[Math.floor(Math.random() * players.length)];
   };
@@ -302,62 +303,66 @@ const MatchSummary = ({ currentMatch, apiConnected }) => {
               <div className="relative">
                 {/* Timeline Line */}
                 <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-accent-red via-accent-blue to-accent-green"></div>
-                
+
                 <div className="space-y-4">
                   {events.map((event, index) => (
-                    <div 
-                      key={index} 
+                    <div
+                      key={index}
                       className="relative flex items-start space-x-4 group scale-in"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                    {/* Timeline Dot */}
-                    <div className="relative z-10">
-                      <div className={`w-4 h-4 rounded-lg bg-gradient-to-r ${getEventColor(event.type, event.impact)} flex items-center justify-center shadow-lg`}>
-                        <div className="w-2 h-2 bg-white rounded-lg"></div>
-                      </div>
-                      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/30 to-transparent animate-ping"></div>
-                    </div>
+                      {/* One root wrapper for dot + card */}
+                      <div className="flex items-start space-x-4 w-full">
+                        {/* Timeline Dot */}
+                        <div className="relative z-10">
+                          <div className={`w-4 h-4 rounded-lg bg-gradient-to-r ${getEventColor(event.type, event.impact)} flex items-center justify-center shadow-lg`}>
+                            <div className="w-2 h-2 bg-white rounded-lg"></div>
+                          </div>
+                          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/30 to-transparent animate-ping"></div>
+                        </div>
 
-                    {/* Event Card */}
-                    <div className="flex-1 bg-tertiary-bg rounded-xl p-4 hover:bg-hover-bg transition-all duration-200 hover-scale group-hover:shadow-lg">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <span className="text-lg">{getEventIcon(event.type)}</span>
-                            <span className="text-sm font-mono text-text-secondary bg-secondary-bg px-2 py-1 rounded">
-                              {event.time}
-                            </span>
-                            <div className={`w-3 h-3 rounded-lg ${
-                              event.team === 'home' ? 'bg-accent-red' : 'bg-accent-blue'
-                            }`}></div>
+                        {/* Event Card */}
+                        <div className="flex-1 bg-tertiary-bg rounded-xl p-4 hover:bg-hover-bg transition-all duration-200 hover-scale group-hover:shadow-lg">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3 mb-2">
+                                <span className="text-lg">{getEventIcon(event.type)}</span>
+                                <span className="text-sm font-mono text-text-secondary bg-secondary-bg px-2 py-1 rounded">
+                                  {event.time}
+                                </span>
+                                <div className={`w-3 h-3 rounded-lg ${
+                                  event.team === 'home' ? 'bg-accent-red' : 'bg-accent-blue'
+                                }`}></div>
+                              </div>
+
+                              <div className="space-y-1">
+                                <div className="text-sm font-bold text-text-primary">
+                                  {event.player}
+                                </div>
+                                <div className="text-xs text-text-secondary font-medium">
+                                  {event.description}
+                                </div>
+                                <div className="text-xs text-text-muted">
+                                  {event.details}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button className="p-2 text-text-muted hover:text-accent-blue transition-colors">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              </button>
+                            </div>
                           </div>
-                          
-                          <div className="space-y-1">
-                            <div className="text-sm font-bold text-text-primary">
-                              {event.player}
-                            </div>
-                            <div className="text-xs text-text-secondary font-medium">
-                              {event.description}
-                            </div>
-                            <div className="text-xs text-text-muted">
-                              {event.details}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="p-2 text-text-muted hover:text-accent-blue transition-colors">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </button>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -365,7 +370,7 @@ const MatchSummary = ({ currentMatch, apiConnected }) => {
         {activeSection === 'lineups' && (
           <div className="space-y-8">
             <h3 className="text-xl font-bold text-text-primary">Team Lineups</h3>
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Home Team */}
               <div className="space-y-4">
@@ -378,12 +383,12 @@ const MatchSummary = ({ currentMatch, apiConnected }) => {
                     <span className="text-sm text-text-secondary ml-2">({lineup.home.formation})</span>
                   </div>
                 </div>
-                
+
                 <div className="bg-tertiary-bg rounded-xl p-4">
                   <div className="space-y-2">
                     {lineup.home.players.map((player, index) => (
-                      <div 
-                        key={index} 
+                      <div
+                        key={index}
                         className="flex items-center justify-between p-2 rounded-lg hover:bg-hover-bg transition-colors scale-in"
                         style={{ animationDelay: `${index * 0.02}s` }}
                       >
@@ -413,12 +418,12 @@ const MatchSummary = ({ currentMatch, apiConnected }) => {
                     <span className="text-sm text-text-secondary ml-2">({lineup.away.formation})</span>
                   </div>
                 </div>
-                
+
                 <div className="bg-tertiary-bg rounded-xl p-4">
                   <div className="space-y-2">
                     {lineup.away.players.map((player, index) => (
-                      <div 
-                        key={index} 
+                      <div
+                        key={index}
                         className="flex items-center justify-between p-2 rounded-lg hover:bg-hover-bg transition-colors scale-in"
                         style={{ animationDelay: `${index * 0.02}s` }}
                       >
@@ -444,14 +449,14 @@ const MatchSummary = ({ currentMatch, apiConnected }) => {
         {activeSection === 'stats' && (
           <div className="space-y-6">
             <h3 className="text-xl font-bold text-text-primary">Player Heat Map</h3>
-            
+
             <div className="bg-gradient-to-r from-green-900 via-green-800 to-green-900 rounded-xl p-6 relative overflow-hidden">
               {/* Field markings */}
               <div className="absolute inset-4 border-2 border-white/30 rounded-lg">
                 <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/30 transform -translate-y-0.5"></div>
                 <div className="absolute top-1/2 left-1/2 w-20 h-20 border-2 border-white/30 rounded-lg transform -translate-x-1/2 -translate-y-1/2"></div>
               </div>
-              
+
               {/* Player Heat Dots */}
               <div className="relative h-64">
                 {/* Home team heat spots */}
@@ -466,7 +471,7 @@ const MatchSummary = ({ currentMatch, apiConnected }) => {
                     }}
                   ></div>
                 ))}
-                
+
                 {/* Away team heat spots */}
                 {[...Array(12)].map((_, i) => (
                   <div
@@ -480,7 +485,7 @@ const MatchSummary = ({ currentMatch, apiConnected }) => {
                   ></div>
                 ))}
               </div>
-              
+
               <div className="flex items-center justify-center space-x-8 mt-4">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-red-500 rounded-lg"></div>
@@ -492,7 +497,7 @@ const MatchSummary = ({ currentMatch, apiConnected }) => {
                 </div>
               </div>
             </div>
-            
+
             <div className="text-center text-text-secondary text-sm">
               Heat map shows player movement intensity throughout the match
             </div>
