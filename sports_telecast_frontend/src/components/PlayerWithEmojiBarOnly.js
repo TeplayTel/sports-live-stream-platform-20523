@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import './emojiBar.css';
+import ApiService from '../services/api';
 
 /**
  * PUBLIC_INTERFACE
@@ -33,7 +34,12 @@ const PlayerWithEmojiBarOnly = () => {
       setIsLoadingEmojis(true);
       setEmojiError(null);
       try {
-        const res = await fetch('http://localhost:5050/fan-engagement/emoji/v1/listEmojis');
+        const res = await fetch('http://localhost:5050/fan-engagement/emoji/v1/listEmojis', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
         if (!res.ok) {
           throw new Error(`Failed to fetch emojis: ${res.status}`);
         }
@@ -147,7 +153,7 @@ const PlayerWithEmojiBarOnly = () => {
    * On emoji click we compute an offset so the burst appears to originate near the clicked emoji,
    * then spawn the burst with the emoji image.
    */
-  const handleEmojiClick = (emoji, evt) => {
+  const handleEmojiClick = async (emoji, evt) => {
     if (!emoji) return;
 
     let offsetX = 0;
@@ -163,7 +169,24 @@ const PlayerWithEmojiBarOnly = () => {
       }
     }
 
+    // Fire-and-forget the animation
     spawnEmojiBurst(emoji.imageUrl, offsetX * 0.6);
+
+    // POST reaction to local Flask endpoint
+    try {
+      const eventId = localStorage.getItem('currentEventId') || 'demo-event';
+      const userId = localStorage.getItem('userId') || 'anonymous';
+      await ApiService.postUserEmojiReaction({
+        userId,
+        eventId,
+        emojiId: emoji.id || emoji.name || 'unknown-emoji',
+        createdAt: new Date().toISOString()
+      });
+      // Optionally: could add optimistic UI or toast
+    } catch (err) {
+      // Log but do not interrupt animation UX
+      console.error('Failed to post emoji reaction:', err);
+    }
   };
 
   // Helper: Alt label for accessibility

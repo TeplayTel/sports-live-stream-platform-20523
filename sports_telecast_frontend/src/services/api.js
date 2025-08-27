@@ -3,6 +3,9 @@ import axios from 'axios';
 // PUBLIC_INTERFACE
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
+// Fan engagement Flask base (local). We use absolute URLs to avoid proxy/baseURL issues.
+const FAN_ENGAGEMENT_BASE = 'http://localhost:5050';
+
 // Create axios instance with default config
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -221,19 +224,33 @@ class ApiService {
   static async submitEmojiReaction(eventId, emojiId) {
     /**
      * Submit an emoji reaction (legacy helper retained for compatibility).
-     * Note: Backend for this project expects camelCase keys via userEmojiReaction; this method
-     * posts minimal keys in snake_case only for legacy fallbacks where supported.
-     * Prefer postUserEmojiReaction for the required payload.
+     * Sends to local Flask BE at http://localhost:5050/fan-engagement/emoji/v1/userEmojiReaction
+     * using the required camelCase payload keys.
      * @param {string} eventId - Event ID
      * @param {string} emojiId - Emoji ID
      * @returns {Promise<Object>} Reaction response
      */
     try {
-      const response = await apiClient.post('/fan-engagement/emoji/v1/userEmojiReaction', {
-        event_id: eventId,
-        emoji_id: emojiId
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${FAN_ENGAGEMENT_BASE}/fan-engagement/emoji/v1/userEmojiReaction`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          // Provide minimal required fields; userId can be anonymous if not logged in
+          userId: localStorage.getItem('userId') || 'anonymous',
+          eventId,
+          emojiId,
+          createdAt: new Date().toISOString()
+        })
       });
-      return response.data;
+      if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        throw new Error(`Submit emoji reaction failed: ${response.status} ${response.statusText} ${text}`);
+      }
+      return await response.json().catch(() => ({}));
     } catch (error) {
       console.error('Submit emoji reaction failed:', error);
       throw error;
@@ -243,18 +260,35 @@ class ApiService {
   // PUBLIC_INTERFACE
   static async postUserEmojiReaction({ userId, eventId, emojiId, createdAt }) {
     /**
-     * Post a user emoji reaction with the required payload shape.
+     * Post a user emoji reaction with the required payload shape against local Flask BE.
      * @param {Object} params
-     * @param {string} params.userId - User ID (use dummy if not available)
-     * @param {string} params.eventId - Event ID (use dummy if not available)
+     * @param {string} params.userId - User ID (use 'anonymous' if not available)
+     * @param {string} params.eventId - Event ID
      * @param {string} params.emojiId - The clicked emoji's id
      * @param {string} params.createdAt - ISO timestamp when reaction is created
      * @returns {Promise<Object>} API response
      */
     try {
-      const body = { userId, eventId, emojiId, createdAt };
-      const response = await apiClient.post('/fan-engagement/emoji/v1/userEmojiReaction', body);
-      return response.data;
+      const token = localStorage.getItem('authToken');
+      const body = {
+        userId: userId || localStorage.getItem('userId') || 'anonymous',
+        eventId,
+        emojiId,
+        createdAt: createdAt || new Date().toISOString()
+      };
+      const response = await fetch(`${FAN_ENGAGEMENT_BASE}/fan-engagement/emoji/v1/userEmojiReaction`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(body)
+      });
+      if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        throw new Error(`postUserEmojiReaction failed: ${response.status} ${response.statusText} ${text}`);
+      }
+      return await response.json().catch(() => ({}));
     } catch (error) {
       console.error('postUserEmojiReaction failed:', error);
       throw error;
