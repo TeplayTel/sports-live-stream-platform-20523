@@ -200,7 +200,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 10px; /* origin slightly above bar baseline */
+  bottom: 14px; /* start a touch closer to the bar for better visibility */
   height: 0;
   pointer-events: none;
   overflow: visible;
@@ -210,7 +210,7 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 22px;
+  font-size: 24px; /* slightly larger for visibility */
   line-height: 1;
   filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
   will-change: transform, opacity;
@@ -221,7 +221,7 @@
   --fly-y: -62vh;
   --wobble-amp: 8px;
   --scale-start: 0.9;
-  --scale-peak: 1.08;
+  --scale-peak: 1.12;
   --scale-end: 0.98;
   --rot: 2deg;
   animation:
@@ -238,7 +238,10 @@
 @keyframes emoji-fly-primary {
   0% {
     transform: translate(0, 0) scale(var(--scale-start)) rotate(var(--rot));
-    opacity: 1;
+    opacity: 0.9;
+  }
+  12% {
+    opacity: 1; /* quick pop-in */
   }
   20% {
     transform: translate(calc(var(--fly-x) * 0.18), calc(var(--fly-y) * 0.18)) scale(var(--scale-peak)) rotate(calc(var(--rot) * 0.75));
@@ -248,9 +251,12 @@
     transform: translate(calc(var(--fly-x) * 0.5), calc(var(--fly-y) * 0.5)) scale(1.0) rotate(calc(var(--rot) * 0.35));
     opacity: 1;
   }
-  65% {
-    transform: translate(calc(var(--fly-x) * 0.65), calc(var(--fly-y) * 0.65)) scale(1.0) rotate(calc(var(--rot) * 0.2));
-    opacity: 1;
+  70% {
+    transform: translate(calc(var(--fly-x) * 0.7), calc(var(--fly-y) * 0.7)) scale(1.0) rotate(calc(var(--rot) * 0.15));
+    opacity: 0.85;
+  }
+  85% {
+    opacity: 0.45;
   }
   100% {
     transform: translate(var(--fly-x), var(--fly-y)) scale(var(--scale-end)) rotate(0deg);

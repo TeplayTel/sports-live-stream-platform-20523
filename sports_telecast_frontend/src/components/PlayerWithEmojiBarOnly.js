@@ -50,24 +50,32 @@ const PlayerWithEmojiBarOnly = () => {
   const handleEmojiClick = (emoji) => {
     if (!emoji) return;
 
-    // Small chance to spawn a second emoji for lively bursts
-    const count = Math.random() < 0.25 ? 2 : 1;
+    // Emit a lively burst of multiple emojis (3–6) every click
+    const burstCount = Math.floor(rand(3, 7)); // 3 to 6
+    const baseNow = Date.now();
 
-    const newItems = Array.from({ length: count }).map((_, i) => {
-      const id = `fly-${Date.now()}-${idCounter.current++}`;
+    const newItems = Array.from({ length: burstCount }).map((_, i) => {
+      const id = `fly-${baseNow}-${idCounter.current++}`;
 
-      // Motion parameters based on spec
-      const dur = rand(1.7, 2.0).toFixed(2);                 // seconds
-      const delay = (i === 0 ? rand(0, 0.08) : rand(0.06, 0.12)).toFixed(2); // stagger
-      const baseX = 32;                                      // px drift to the right bias
-      const jitter = rand(-20, 20);                          // px
-      const flyX = baseX + jitter;
-      const wobbleAmp = rand(6, 10).toFixed(1);              // px
-      const scaleStart = rand(0.86, 0.94).toFixed(2);
-      const scalePeak = rand(1.05, 1.12).toFixed(2);
-      const scaleEnd = rand(0.98, 1.00).toFixed(2);
-      const rot = `${rand(-4, 4).toFixed(1)}deg`;
-      const flyY = '-62vh';                                  // travel up before top HUD
+      // Randomize motion parameters per sprite for engaging variety
+      const dur = rand(1.7, 2.05).toFixed(2); // seconds
+      const delay = rand(0.02 * i, 0.12 + 0.02 * i).toFixed(2); // slight stagger increase
+      // Randomize left/right bias a bit more so paths separate visually
+      const baseX = rand(18, 42); // pixels of right drift baseline
+      const jitter = rand(-26, 26); // px random left/right
+      const flyX = Math.round(baseX + jitter);
+      const wobbleAmp = rand(6, 12).toFixed(1); // px wobble range
+      // Vary starting near the bar and ensure visibility with size pop
+      const scaleStart = rand(0.88, 1.02).toFixed(2);
+      const scalePeak = rand(1.08, 1.18).toFixed(2);
+      const scaleEnd = rand(0.96, 1.02).toFixed(2);
+      const rot = `${rand(-8, 8).toFixed(1)}deg`; // slightly stronger rotation variety
+
+      // Vertical travel: ensure they disappear near top
+      const flyY = '-62vh';
+
+      // For extra variety, occasionally flip horizontal direction
+      const maybeFlip = Math.random() < 0.25 ? -1 : 1;
 
       return {
         id,
@@ -75,7 +83,7 @@ const PlayerWithEmojiBarOnly = () => {
         vars: {
           '--fly-dur': `${dur}s`,
           '--fly-delay': `${delay}s`,
-          '--fly-x': `${flyX}px`,
+          '--fly-x': `${flyX * maybeFlip}px`,
           '--fly-y': flyY,
           '--wobble-amp': `${wobbleAmp}px`,
           '--scale-start': scaleStart,
@@ -86,7 +94,11 @@ const PlayerWithEmojiBarOnly = () => {
       };
     });
 
-    setFlying(prev => [...prev, ...newItems]);
+    setFlying(prev => {
+      // Avoid excessive accumulation; cap at ~24 active to keep DOM light
+      const combined = [...prev, ...newItems];
+      return combined.slice(-24);
+    });
   };
 
   // Helper: Alt label for accessibility
