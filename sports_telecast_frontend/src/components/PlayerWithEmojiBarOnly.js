@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useCallback } from 'react';
 import './emojiBar.css';
 
 /**
@@ -43,13 +43,10 @@ const PlayerWithEmojiBarOnly = () => {
   const rand = (min, max) => Math.random() * (max - min) + min;
 
   /**
-   * On click, spawn one or more transient emoji elements with randomized motion seeds.
-   * Each element sets CSS variables to control duration, delay, drift, wobble, scale and rotation.
+   * Spawn a burst of emojis with randomized motion seeds.
    * Nodes are removed automatically on animationend for proper cleanup.
    */
-  const handleEmojiClick = (emoji) => {
-    if (!emoji) return;
-
+  const spawnEmojiBurst = useCallback((glyph, spawnOffsetX = 0) => {
     // Emit a lively burst of multiple emojis (3–6) every click
     const burstCount = Math.floor(rand(3, 7)); // 3 to 6
     const baseNow = Date.now();
@@ -59,27 +56,27 @@ const PlayerWithEmojiBarOnly = () => {
 
       // Randomize motion parameters per sprite for engaging variety
       const dur = rand(1.7, 2.05).toFixed(2); // seconds
-      const delay = rand(0.02 * i, 0.12 + 0.02 * i).toFixed(2); // slight stagger increase
+      const delay = rand(0.04 * i, 0.14 + 0.03 * i).toFixed(2); // slight stagger increase
       // Randomize left/right bias a bit more so paths separate visually
-      const baseX = rand(18, 42); // pixels of right drift baseline
-      const jitter = rand(-26, 26); // px random left/right
-      const flyX = Math.round(baseX + jitter);
+      const baseX = rand(22, 46); // pixels of right drift baseline
+      const jitter = rand(-28, 28); // px random left/right
+      const flyX = Math.round(baseX + jitter + spawnOffsetX);
       const wobbleAmp = rand(6, 12).toFixed(1); // px wobble range
       // Vary starting near the bar and ensure visibility with size pop
-      const scaleStart = rand(0.88, 1.02).toFixed(2);
+      const scaleStart = rand(0.9, 1.02).toFixed(2);
       const scalePeak = rand(1.08, 1.18).toFixed(2);
-      const scaleEnd = rand(0.96, 1.02).toFixed(2);
-      const rot = `${rand(-8, 8).toFixed(1)}deg`; // slightly stronger rotation variety
+      const scaleEnd = rand(0.95, 1.02).toFixed(2);
+      const rot = `${rand(-8, 8).toFixed(1)}deg`; // subtle rotation variety
 
       // Vertical travel: ensure they disappear near top
       const flyY = '-62vh';
 
-      // For extra variety, occasionally flip horizontal direction
+      // Occasionally flip horizontal direction
       const maybeFlip = Math.random() < 0.25 ? -1 : 1;
 
       return {
         id,
-        glyph: emoji.glyph,
+        glyph,
         vars: {
           '--fly-dur': `${dur}s`,
           '--fly-delay': `${delay}s`,
@@ -95,10 +92,34 @@ const PlayerWithEmojiBarOnly = () => {
     });
 
     setFlying(prev => {
-      // Avoid excessive accumulation; cap at ~24 active to keep DOM light
       const combined = [...prev, ...newItems];
-      return combined.slice(-24);
+      // Cap to prevent node pile-up
+      return combined.slice(-32);
     });
+  }, []);
+
+  /**
+   * On emoji click we compute an offset so the burst appears to originate near the clicked emoji,
+   * then spawn the burst.
+   */
+  const handleEmojiClick = (emoji, evt) => {
+    if (!emoji) return;
+
+    let offsetX = 0;
+    if (barRef.current && evt?.currentTarget) {
+      try {
+        const barRect = barRef.current.getBoundingClientRect();
+        const btnRect = evt.currentTarget.getBoundingClientRect();
+        // positive: to the right of bar center, negative: left
+        const btnCenter = btnRect.left + btnRect.width / 2;
+        const barCenter = barRect.left + barRect.width / 2;
+        offsetX = Math.max(-80, Math.min(80, btnCenter - barCenter)); // clamp within ±80px
+      } catch {
+        offsetX = 0;
+      }
+    }
+
+    spawnEmojiBurst(emoji.glyph, offsetX / 2); // subtle offset influence
   };
 
   // Helper: Alt label for accessibility
@@ -116,7 +137,7 @@ const PlayerWithEmojiBarOnly = () => {
         key={key}
         className={`emoji${isSpecial ? ' special' : ''}`}
         aria-label={getEmojiAriaLabel(emoji)}
-        onClick={() => handleEmojiClick(emoji)}
+        onClick={(e) => handleEmojiClick(emoji, e)}
         type="button"
         title={emoji?.description || emoji?.name || 'Reaction'}
       >
@@ -175,7 +196,18 @@ const PlayerWithEmojiBarOnly = () => {
               <span
                 key={f.id}
                 className="flying-emoji"
-                style={f.vars}
+                // Inline all animation variables to avoid inheritance issues per node
+                style={{
+                  '--fly-dur': f.vars['--fly-dur'],
+                  '--fly-delay': f.vars['--fly-delay'],
+                  '--fly-x': f.vars['--fly-x'],
+                  '--fly-y': f.vars['--fly-y'],
+                  '--wobble-amp': f.vars['--wobble-amp'],
+                  '--scale-start': f.vars['--scale-start'],
+                  '--scale-peak': f.vars['--scale-peak'],
+                  '--scale-end': f.vars['--scale-end'],
+                  '--rot': f.vars['--rot']
+                }}
                 onAnimationEnd={() => {
                   // Cleanup DOM node after the fly animation completes
                   setFlying(prev => prev.filter(x => x.id !== f.id));
