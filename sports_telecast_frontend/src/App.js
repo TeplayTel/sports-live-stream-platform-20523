@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import SportsFilter from './components/SportsFilter';
 import VideoPlayer from './components/VideoPlayer';
+import PlayerWithEmojiBarOnly from './components/PlayerWithEmojiBarOnly';
 import MatchInfoSection from './components/MatchInfoSection';
 import AnalyticsPanel from './components/AnalyticsPanel';
 import MatchSummary from './components/MatchSummary';
@@ -187,6 +188,10 @@ function App() {
         
         {/* Main Layout Grid */}
         <div className="max-w-7xl mx-auto p-4 sm:p-6">
+          {/* Minimal player surface to showcase Emoji Bar UI only */}
+          <div className="mb-6 slide-in-left">
+            <PlayerWithEmojiBarOnly />
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Main Video Area */}
             <div className="lg:col-span-8 space-y-6">

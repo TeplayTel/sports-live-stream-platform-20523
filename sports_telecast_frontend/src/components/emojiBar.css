@@ -1,0 +1,192 @@
+:root {
+  --emojiBar-bg: rgba(34, 34, 38, 0.92);
+  --emojiBar-border: rgba(255, 255, 255, 0.08);
+  --emojiBar-shadow: rgba(0, 0, 0, 0.35);
+  --emojiNav-bg: rgba(255, 255, 255, 0.06);
+  --emojiNav-bg-hover: rgba(255, 255, 255, 0.12);
+  --emojiNav-icon: rgba(255, 255, 255, 0.85);
+  --emojiNav-icon-hover: #FFFFFF;
+  --emojiPill-special-bg: linear-gradient(135deg, #FF4CA3 0%, #FFB03A 100%);
+  --emojiPill-special-glow: rgba(255, 120, 120, 0.35);
+  --emoji-focus-ring: rgba(255, 255, 255, 0.35);
+}
+
+/* A simple mock "player" surface to position the emoji bar appropriately */
+.emoji-demo-wrapper {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.emoji-demo-surface {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: radial-gradient(1200px 600px at 20% 20%, rgba(255,255,255,0.06), rgba(0,0,0,0)) #0b0f25;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+}
+
+.emoji-demo-title {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  color: rgba(255,255,255,0.85);
+  font-size: 14px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* Emoji Bar */
+.emoji-bar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 88px;
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  gap: 12px;
+  background: var(--emojiBar-bg);
+  -webkit-backdrop-filter: saturate(120%) blur(8px);
+  backdrop-filter: saturate(120%) blur(8px);
+  border: 1px solid var(--emojiBar-border);
+  border-radius: 24px;
+  box-shadow: 0 8px 24px var(--emojiBar-shadow);
+  z-index: 10;
+  opacity: 1;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.emoji-bar.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(8px);
+}
+
+.emoji-bar.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Emoji Button */
+.emoji-bar .emoji {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  font-size: 24px;
+  line-height: 1;
+  color: #fff;
+  cursor: pointer;
+  transform: translateZ(0);
+  transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease, filter 120ms ease;
+}
+
+.emoji-bar .emoji:hover {
+  transform: scale(1.06);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.emoji-bar .emoji:active {
+  transform: scale(0.96);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.emoji-bar .emoji:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--emoji-focus-ring) inset;
+}
+
+.emoji-bar .emoji .emoji-glyph {
+  pointer-events: none;
+}
+
+/* Special Emoji */
+.emoji-bar .emoji.special {
+  background: var(--emojiPill-special-bg);
+  color: #1A1A1A;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+    0 6px 18px var(--emojiPill-special-glow);
+}
+
+.emoji-bar .emoji.special:hover {
+  transform: scale(1.07);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset,
+    0 8px 22px var(--emojiPill-special-glow);
+}
+
+.emoji-bar .emoji.special:active {
+  transform: scale(0.95);
+  filter: brightness(0.97);
+}
+
+/* Spacer between emoji list and nav controls */
+.emoji-bar .spacer {
+  width: 16px;
+}
+
+/* Navigation Buttons */
+.emoji-bar .nav-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--emojiNav-bg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--emojiNav-icon);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+}
+
+.emoji-bar .nav-btn:hover {
+  background: var(--emojiNav-bg-hover);
+  color: var(--emojiNav-icon-hover);
+}
+
+.emoji-bar .nav-btn:active {
+  transform: scale(0.95);
+}
+
+.emoji-bar .nav-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--emoji-focus-ring) inset;
+}
+
+@media (max-width: 1023px) {
+  .emoji-bar {
+    gap: 10px;
+    padding: 6px 10px;
+  }
+  .emoji-bar .emoji {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 767px) {
+  .emoji-bar {
+    width: 92vw;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 84px;
+  }
+  .emoji-bar .nav-btn {
+    display: none;
+  }
+}
