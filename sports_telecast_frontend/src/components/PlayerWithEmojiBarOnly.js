@@ -45,56 +45,56 @@ const PlayerWithEmojiBarOnly = () => {
   /**
    * Spawn a burst of emojis with randomized motion seeds.
    * Nodes are removed automatically on animationend for proper cleanup.
+   * Ensures 3–6 visible nodes with reliable stagger and durations to avoid instant disappearance.
    */
   const spawnEmojiBurst = useCallback((glyph, spawnOffsetX = 0) => {
-    // Emit a lively burst of multiple emojis (3–6) every click
-    const burstCount = Math.floor(rand(3, 7)); // 3 to 6
+    const burstCount = Math.floor(rand(3, 7)); // 3..6 inclusive
     const baseNow = Date.now();
 
     const newItems = Array.from({ length: burstCount }).map((_, i) => {
       const id = `fly-${baseNow}-${idCounter.current++}`;
 
-      // Randomize motion parameters per sprite for engaging variety
-      const dur = rand(1.7, 2.05).toFixed(2); // seconds
-      const delay = rand(0.04 * i, 0.14 + 0.03 * i).toFixed(2); // slight stagger increase
-      // Randomize left/right bias a bit more so paths separate visually
-      const baseX = rand(22, 46); // pixels of right drift baseline
-      const jitter = rand(-28, 28); // px random left/right
-      const flyX = Math.round(baseX + jitter + spawnOffsetX);
-      const wobbleAmp = rand(6, 12).toFixed(1); // px wobble range
-      // Vary starting near the bar and ensure visibility with size pop
-      const scaleStart = rand(0.9, 1.02).toFixed(2);
-      const scalePeak = rand(1.08, 1.18).toFixed(2);
-      const scaleEnd = rand(0.95, 1.02).toFixed(2);
-      const rot = `${rand(-8, 8).toFixed(1)}deg`; // subtle rotation variety
+      // Motion tuning for visibility: slight variance but bounded
+      const dur = rand(1.8, 2.2); // a bit wider window, never too short
+      const delay = Math.max(0, Math.min(0.25, rand(0.06 * i, 0.12 + 0.04 * i))); // clamp stagger to keep group visible
 
-      // Vertical travel: ensure they disappear near top
+      // Horizontal drift and jitter relative to click position
+      const baseX = rand(20, 42);
+      const jitter = rand(-26, 26);
+      const maybeFlip = Math.random() < 0.25 ? -1 : 1;
+      const flyX = Math.round((baseX + jitter + spawnOffsetX) * maybeFlip);
+
+      // Vertical height stays generous for a nice arc
       const flyY = '-62vh';
 
-      // Occasionally flip horizontal direction
-      const maybeFlip = Math.random() < 0.25 ? -1 : 1;
+      // Subtle wobble and rotation variability
+      const wobbleAmp = rand(6, 12);
+      const scaleStart = rand(0.9, 1.0);
+      const scalePeak = rand(1.08, 1.16);
+      const scaleEnd = rand(0.95, 1.02);
+      const rot = `${rand(-8, 8).toFixed(1)}deg`;
 
       return {
         id,
         glyph,
         vars: {
-          '--fly-dur': `${dur}s`,
-          '--fly-delay': `${delay}s`,
-          '--fly-x': `${flyX * maybeFlip}px`,
+          '--fly-dur': `${dur.toFixed(2)}s`,
+          '--fly-delay': `${delay.toFixed(2)}s`,
+          '--fly-x': `${flyX}px`,
           '--fly-y': flyY,
-          '--wobble-amp': `${wobbleAmp}px`,
-          '--scale-start': scaleStart,
-          '--scale-peak': scalePeak,
-          '--scale-end': scaleEnd,
+          '--wobble-amp': `${wobbleAmp.toFixed(1)}px`,
+          '--scale-start': scaleStart.toFixed(2),
+          '--scale-peak': scalePeak.toFixed(2),
+          '--scale-end': scaleEnd.toFixed(2),
           '--rot': rot
         }
       };
     });
 
+    // Add to state and trim to keep DOM small; slightly higher cap to allow overlapping bursts
     setFlying(prev => {
       const combined = [...prev, ...newItems];
-      // Cap to prevent node pile-up
-      return combined.slice(-32);
+      return combined.slice(-48);
     });
   }, []);
 
@@ -110,16 +110,17 @@ const PlayerWithEmojiBarOnly = () => {
       try {
         const barRect = barRef.current.getBoundingClientRect();
         const btnRect = evt.currentTarget.getBoundingClientRect();
-        // positive: to the right of bar center, negative: left
         const btnCenter = btnRect.left + btnRect.width / 2;
         const barCenter = barRect.left + barRect.width / 2;
-        offsetX = Math.max(-80, Math.min(80, btnCenter - barCenter)); // clamp within ±80px
+        // clamp offset influence to keep paths onscreen
+        offsetX = Math.max(-80, Math.min(80, btnCenter - barCenter));
       } catch {
         offsetX = 0;
       }
     }
 
-    spawnEmojiBurst(emoji.glyph, offsetX / 2); // subtle offset influence
+    // Slightly stronger offset to better separate bursts across the row
+    spawnEmojiBurst(emoji.glyph, offsetX * 0.6);
   };
 
   // Helper: Alt label for accessibility
@@ -196,7 +197,6 @@ const PlayerWithEmojiBarOnly = () => {
               <span
                 key={f.id}
                 className="flying-emoji"
-                // Inline all animation variables to avoid inheritance issues per node
                 style={{
                   '--fly-dur': f.vars['--fly-dur'],
                   '--fly-delay': f.vars['--fly-delay'],
@@ -209,7 +209,7 @@ const PlayerWithEmojiBarOnly = () => {
                   '--rot': f.vars['--rot']
                 }}
                 onAnimationEnd={() => {
-                  // Cleanup DOM node after the fly animation completes
+                  // Robust cleanup in case multiple animations are attached by the browser
                   setFlying(prev => prev.filter(x => x.id !== f.id));
                 }}
               >

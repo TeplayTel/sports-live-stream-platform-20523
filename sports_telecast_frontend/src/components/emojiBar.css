@@ -205,7 +205,7 @@
   height: 0;
   pointer-events: none;
   overflow: visible;
-  z-index: 999; /* ensure above bar chrome */
+  z-index: 9999; /* ensure above bar chrome and icons */
 }
 
 .emoji-bar .flying-emoji {
@@ -214,15 +214,15 @@
   transform: translateX(-50%);
   font-size: 26px; /* slightly larger for visibility */
   line-height: 1;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.45));
   will-change: transform, opacity;
   /* Variables driven by React inline styles; sensible defaults: */
-  --fly-dur: 1.85s;
+  --fly-dur: 1.95s;
   --fly-delay: 0s;
   --fly-x: 32px;
   --fly-y: -62vh;
   --wobble-amp: 8px;
-  --scale-start: 0.9;
+  --scale-start: 0.92;
   --scale-peak: 1.12;
   --scale-end: 0.98;
   --rot: 2deg;
@@ -240,25 +240,25 @@
 @keyframes emoji-fly-primary {
   0% {
     transform: translate(0, 0) scale(var(--scale-start)) rotate(var(--rot));
-    opacity: 0.9;
+    opacity: 0.92;
   }
-  12% {
+  10% {
     opacity: 1; /* quick pop-in */
   }
-  20% {
+  22% {
     transform: translate(calc(var(--fly-x) * 0.18), calc(var(--fly-y) * 0.18)) scale(var(--scale-peak)) rotate(calc(var(--rot) * 0.75));
     opacity: 1;
   }
-  50% {
+  55% {
     transform: translate(calc(var(--fly-x) * 0.5), calc(var(--fly-y) * 0.5)) scale(1.0) rotate(calc(var(--rot) * 0.35));
     opacity: 1;
   }
-  70% {
+  72% {
     transform: translate(calc(var(--fly-x) * 0.7), calc(var(--fly-y) * 0.7)) scale(1.0) rotate(calc(var(--rot) * 0.15));
-    opacity: 0.85;
+    opacity: 0.9;
   }
   85% {
-    opacity: 0.45;
+    opacity: 0.5; /* start fade later to keep visibility */
   }
   100% {
     transform: translate(var(--fly-x), var(--fly-y)) scale(var(--scale-end)) rotate(0deg);
@@ -280,6 +280,9 @@
   .emoji-bar .flying-emoji {
     --fly-y: -30vh;
     --rot: 0deg;
+    --scale-start: 1;
+    --scale-peak: 1;
+    --scale-end: 1;
   }
   .emoji-bar .flying-emoji .flying-emoji-wobble {
     animation: none;
