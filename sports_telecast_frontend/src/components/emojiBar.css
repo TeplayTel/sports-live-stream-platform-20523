@@ -194,3 +194,34 @@
     display: none;
   }
 }
+
+/* Flying emoji layer and animation */
+.emoji-bar .emoji-fly-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6px; /* start a bit above the bar bottom */
+  height: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.emoji-bar .flying-emoji {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 22px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+  animation: naturalFlyUp 0.9s ease-out forwards;
+  /* Allow per-emoji custom properties set inline:
+     --curve: horizontal curve offset (px)
+     --rotation: final rotation (deg) */
+  color: #fff;
+}
+
+/* Fallback if custom props missing */
+.emoji-bar .flying-emoji {
+  --curve: 10px;
+  --rotation: 540deg;
+}
