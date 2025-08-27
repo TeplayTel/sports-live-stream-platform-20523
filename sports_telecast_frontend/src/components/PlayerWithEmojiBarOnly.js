@@ -61,9 +61,36 @@ const PlayerWithEmojiBarOnly = () => {
   // Placeholder handlers for UI only; POST will be wired in a subsequent step
   const handlePrev = () => {};
   const handleNext = () => {};
-  const handleEmojiClick = (emoji) => {
-    // Will POST to /fan-engagement/emoji/v1/userEmojiReaction in the next step
-    // console.log('Clicked emoji', emoji);
+  const handleEmojiClick = async (emoji) => {
+    /**
+     * Handle click on an emoji icon from the emoji bar.
+     * Sends a POST to /fan-engagement/emoji/v1/userEmojiReaction with payload:
+     * { userId, eventId, emojiId, createdAt }
+     * For now, uses dummy placeholders for userId and eventId.
+     */
+    if (!emoji) return;
+    const emojiId = emoji?.id || emoji?.emojiId || emoji?.emoji_id || emoji?.name || 'unknown';
+    const payload = {
+      userId: 'USR001',
+      eventId: 'EVT001',
+      emojiId,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      // Prefer the explicit API if available; fallback to generic client if necessary
+      if (typeof ApiService.postUserEmojiReaction === 'function') {
+        await ApiService.postUserEmojiReaction(payload);
+      } else if (typeof ApiService.submitEmojiReaction === 'function') {
+        // Legacy submit call (different shape) – keep for compatibility if backend accepts it
+        await ApiService.submitEmojiReaction(payload.eventId, payload.emojiId);
+      }
+      // Optional: local success feedback could be added here (e.g. animation/sound)
+      // console.debug('Reaction submitted:', payload);
+    } catch (e) {
+      // Log non-blocking error; UI remains responsive
+      console.error('Failed to submit emoji reaction', e);
+    }
   };
 
   // Helper: Alt label for accessibility

@@ -220,7 +220,10 @@ class ApiService {
 
   static async submitEmojiReaction(eventId, emojiId) {
     /**
-     * Submit an emoji reaction for a live event
+     * Submit an emoji reaction (legacy helper retained for compatibility).
+     * Note: Backend for this project expects camelCase keys via userEmojiReaction; this method
+     * posts minimal keys in snake_case only for legacy fallbacks where supported.
+     * Prefer postUserEmojiReaction for the required payload.
      * @param {string} eventId - Event ID
      * @param {string} emojiId - Emoji ID
      * @returns {Promise<Object>} Reaction response
@@ -233,6 +236,27 @@ class ApiService {
       return response.data;
     } catch (error) {
       console.error('Submit emoji reaction failed:', error);
+      throw error;
+    }
+  }
+
+  // PUBLIC_INTERFACE
+  static async postUserEmojiReaction({ userId, eventId, emojiId, createdAt }) {
+    /**
+     * Post a user emoji reaction with the required payload shape.
+     * @param {Object} params
+     * @param {string} params.userId - User ID (use dummy if not available)
+     * @param {string} params.eventId - Event ID (use dummy if not available)
+     * @param {string} params.emojiId - The clicked emoji's id
+     * @param {string} params.createdAt - ISO timestamp when reaction is created
+     * @returns {Promise<Object>} API response
+     */
+    try {
+      const body = { userId, eventId, emojiId, createdAt };
+      const response = await apiClient.post('/fan-engagement/emoji/v1/userEmojiReaction', body);
+      return response.data;
+    } catch (error) {
+      console.error('postUserEmojiReaction failed:', error);
       throw error;
     }
   }
