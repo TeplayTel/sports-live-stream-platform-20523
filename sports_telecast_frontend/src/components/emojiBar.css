@@ -109,6 +109,10 @@
 
 .emoji-bar .emoji .emoji-glyph {
   pointer-events: none;
+  display: inline-block;
+  vertical-align: middle;
+  /* When rendering images, ensure they don't get blurred and match glyph baseline visually */
+  image-rendering: auto;
 }
 
 /* Special Emoji */
