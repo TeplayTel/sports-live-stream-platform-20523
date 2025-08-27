@@ -200,7 +200,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 6px; /* start a bit above the bar bottom */
+  bottom: 10px; /* origin slightly above bar baseline */
   height: 0;
   pointer-events: none;
   overflow: visible;
@@ -213,15 +213,67 @@
   font-size: 22px;
   line-height: 1;
   filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
-  animation: naturalFlyUp 0.9s ease-out forwards;
-  /* Allow per-emoji custom properties set inline:
-     --curve: horizontal curve offset (px)
-     --rotation: final rotation (deg) */
+  will-change: transform, opacity;
+  /* Variables driven by React inline styles; sensible defaults: */
+  --fly-dur: 1.85s;
+  --fly-delay: 0s;
+  --fly-x: 32px;
+  --fly-y: -62vh;
+  --wobble-amp: 8px;
+  --scale-start: 0.9;
+  --scale-peak: 1.08;
+  --scale-end: 0.98;
+  --rot: 2deg;
+  animation:
+    emoji-fly-primary var(--fly-dur) cubic-bezier(0.22, 0.61, 0.36, 1) var(--fly-delay) forwards;
   color: #fff;
 }
 
-/* Fallback if custom props missing */
-.emoji-bar .flying-emoji {
-  --curve: 10px;
-  --rotation: 540deg;
+.emoji-bar .flying-emoji .flying-emoji-wobble {
+  display: inline-block;
+  animation: emoji-wobbleX var(--fly-dur) ease-in-out var(--fly-delay) forwards;
+}
+
+/* Primary fly-motion with scale pop and fade near end */
+@keyframes emoji-fly-primary {
+  0% {
+    transform: translate(0, 0) scale(var(--scale-start)) rotate(var(--rot));
+    opacity: 1;
+  }
+  20% {
+    transform: translate(calc(var(--fly-x) * 0.18), calc(var(--fly-y) * 0.18)) scale(var(--scale-peak)) rotate(calc(var(--rot) * 0.75));
+    opacity: 1;
+  }
+  50% {
+    transform: translate(calc(var(--fly-x) * 0.5), calc(var(--fly-y) * 0.5)) scale(1.0) rotate(calc(var(--rot) * 0.35));
+    opacity: 1;
+  }
+  65% {
+    transform: translate(calc(var(--fly-x) * 0.65), calc(var(--fly-y) * 0.65)) scale(1.0) rotate(calc(var(--rot) * 0.2));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--fly-x), var(--fly-y)) scale(var(--scale-end)) rotate(0deg);
+    opacity: 0;
+  }
+}
+
+/* Gentle horizontal wobble for organic feel */
+@keyframes emoji-wobbleX {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(var(--wobble-amp)); }
+  50% { transform: translateX(0); }
+  75% { transform: translateX(calc(var(--wobble-amp) * -1)); }
+  100% { transform: translateX(0); }
+}
+
+/* Reduced motion: shorter travel, no rotation or wobble */
+@media (prefers-reduced-motion: reduce) {
+  .emoji-bar .flying-emoji {
+    --fly-y: -30vh;
+    --rot: 0deg;
+  }
+  .emoji-bar .flying-emoji .flying-emoji-wobble {
+    animation: none;
+  }
 }

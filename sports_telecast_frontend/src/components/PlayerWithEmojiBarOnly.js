@@ -4,8 +4,8 @@ import './emojiBar.css';
 /**
  * PUBLIC_INTERFACE
  * Minimal player-like container whose sole purpose is to visually host the Emoji Bar UI.
- * This version intentionally uses a hardcoded emoji set and a CSS-only "fly" animation on click
- * for testing/validation without any backend calls.
+ * This version intentionally uses a hardcoded emoji set and a refined CSS animation on click
+ * that matches the "easy breezy" spec from assets/emoji_fly_animation_notes.md.
  */
 const PlayerWithEmojiBarOnly = () => {
   /**
@@ -39,31 +39,54 @@ const PlayerWithEmojiBarOnly = () => {
   const handlePrev = () => {};
   const handleNext = () => {};
 
+  // Util: random within range
+  const rand = (min, max) => Math.random() * (max - min) + min;
+
   /**
-   * On click, spawn a transient emoji element that flies upward with CSS animation
-   * and gets removed once the animation ends.
+   * On click, spawn one or more transient emoji elements with randomized motion seeds.
+   * Each element sets CSS variables to control duration, delay, drift, wobble, scale and rotation.
+   * Nodes are removed automatically on animationend for proper cleanup.
    */
   const handleEmojiClick = (emoji) => {
     if (!emoji) return;
 
-    // Determine a slight horizontal curve variation so multiple clicks look natural
-    const curve = (Math.random() * 30 - 15).toFixed(1); // -15px..15px
-    const rotation = `${Math.random() > 0.5 ? 360 : 540}deg`;
-    const id = `fly-${Date.now()}-${idCounter.current++}`;
+    // Small chance to spawn a second emoji for lively bursts
+    const count = Math.random() < 0.25 ? 2 : 1;
 
-    const item = {
-      id,
-      glyph: emoji.glyph,
-      curve,
-      rotation,
-    };
+    const newItems = Array.from({ length: count }).map((_, i) => {
+      const id = `fly-${Date.now()}-${idCounter.current++}`;
 
-    setFlying(prev => [...prev, item]);
+      // Motion parameters based on spec
+      const dur = rand(1.7, 2.0).toFixed(2);                 // seconds
+      const delay = (i === 0 ? rand(0, 0.08) : rand(0.06, 0.12)).toFixed(2); // stagger
+      const baseX = 32;                                      // px drift to the right bias
+      const jitter = rand(-20, 20);                          // px
+      const flyX = baseX + jitter;
+      const wobbleAmp = rand(6, 10).toFixed(1);              // px
+      const scaleStart = rand(0.86, 0.94).toFixed(2);
+      const scalePeak = rand(1.05, 1.12).toFixed(2);
+      const scaleEnd = rand(0.98, 1.00).toFixed(2);
+      const rot = `${rand(-4, 4).toFixed(1)}deg`;
+      const flyY = '-62vh';                                  // travel up before top HUD
 
-    // Auto-remove after animation completes (~900ms)
-    setTimeout(() => {
-      setFlying(prev => prev.filter(f => f.id !== id));
-    }, 1000);
+      return {
+        id,
+        glyph: emoji.glyph,
+        vars: {
+          '--fly-dur': `${dur}s`,
+          '--fly-delay': `${delay}s`,
+          '--fly-x': `${flyX}px`,
+          '--fly-y': flyY,
+          '--wobble-amp': `${wobbleAmp}px`,
+          '--scale-start': scaleStart,
+          '--scale-peak': scalePeak,
+          '--scale-end': scaleEnd,
+          '--rot': rot
+        }
+      };
+    });
+
+    setFlying(prev => [...prev, ...newItems]);
   };
 
   // Helper: Alt label for accessibility
@@ -86,7 +109,7 @@ const PlayerWithEmojiBarOnly = () => {
         title={emoji?.description || emoji?.name || 'Reaction'}
       >
         <span className="emoji-glyph" aria-hidden="true" style={{ fontSize: 24, display: 'block' }}>
-            {emoji.glyph}
+          {emoji.glyph}
         </span>
       </button>
     );
@@ -140,12 +163,13 @@ const PlayerWithEmojiBarOnly = () => {
               <span
                 key={f.id}
                 className="flying-emoji"
-                style={{
-                  '--curve': `${f.curve}px`,
-                  '--rotation': f.rotation,
+                style={f.vars}
+                onAnimationEnd={() => {
+                  // Cleanup DOM node after the fly animation completes
+                  setFlying(prev => prev.filter(x => x.id !== f.id));
                 }}
               >
-                {f.glyph}
+                <span className="flying-emoji-wobble">{f.glyph}</span>
               </span>
             ))}
           </div>
