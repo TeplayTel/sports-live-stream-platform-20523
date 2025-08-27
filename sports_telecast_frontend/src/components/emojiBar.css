@@ -112,8 +112,11 @@
   pointer-events: none;
   display: inline-block;
   vertical-align: middle;
-  /* When rendering images, ensure they don't get blurred and match glyph baseline visually */
+  /* Render images crisply and prevent blurring on scaling */
   image-rendering: auto;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }
 
 /* Special Emoji */

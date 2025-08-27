@@ -1,37 +1,24 @@
-import React, { useMemo, useRef, useState, useCallback } from 'react';
+import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import './emojiBar.css';
 
 /**
  * PUBLIC_INTERFACE
  * Minimal player-like container whose sole purpose is to visually host the Emoji Bar UI.
- * This version intentionally uses a hardcoded emoji set and a refined CSS animation on click
- * that matches the "easy breezy" spec from assets/emoji_fly_animation_notes.md.
+ * Now fetches emojis from a local Flask server (http://localhost:5050) and renders all icons as images.
+ * The click animation logic is preserved but uses an <img> as the flying node content.
  */
 const PlayerWithEmojiBarOnly = () => {
   /**
-   * Hardcoded emoji set for animation testing (no backend).
-   * The first entry is treated as the "special" highlighted emoji.
+   * Local Flask server for emoji images and listing:
+   * GET http://localhost:5050/fan-engagement/emoji/v1/listEmojis
+   * Expected shape (per item, relevant fields):
+   *   { id: string, name: string, description?: string, imageUrl: string, isSpecial?: boolean }
    */
-  const HARD_EMOJIS = useMemo(
-    () => ([
-      { id: 'spark-heart', name: 'favorite', description: 'Favorite', glyph: '💖', isSpecial: true },
-      { id: 'love-eyes', name: 'love-eyes', description: 'Love eyes', glyph: '😍' },
-      { id: 'clap', name: 'clap', description: 'Clap', glyph: '👏' },
-      { id: 'joy', name: 'joy', description: 'Tears of joy', glyph: '😂' },
-      { id: 'wow', name: 'wow', description: 'Wow', glyph: '😮' },
-      { id: 'fire', name: 'fire', description: 'Fire', glyph: '🔥' },
-      { id: 'soccer', name: 'soccer', description: 'Football', glyph: '⚽' },
-    ]),
-    []
-  );
+  const [emojiList, setEmojiList] = useState([]);
+  const [isLoadingEmojis, setIsLoadingEmojis] = useState(false);
+  const [emojiError, setEmojiError] = useState(null);
 
-  const { specialEmoji, regularEmojis } = useMemo(() => {
-    const special = HARD_EMOJIS.find(e => e.isSpecial) || HARD_EMOJIS[0];
-    const rest = HARD_EMOJIS.filter(e => e !== special);
-    return { specialEmoji: special, regularEmojis: rest };
-  }, [HARD_EMOJIS]);
-
-  // Local state for transient "flying" emojis
+  // Local state for transient "flying" emoji images
   const [flying, setFlying] = useState([]);
   const idCounter = useRef(0);
   const barRef = useRef(null);
@@ -39,14 +26,57 @@ const PlayerWithEmojiBarOnly = () => {
   const handlePrev = () => {};
   const handleNext = () => {};
 
-  // Util: random within range (exportable for tests)
-  const rand = (min, max) => Math.random() * (max - min) + min;
+  // Fetch emojis from local Flask server
+  useEffect(() => {
+    let isMounted = true;
+    const loadEmojis = async () => {
+      setIsLoadingEmojis(true);
+      setEmojiError(null);
+      try {
+        const res = await fetch('http://localhost:5050/fan-engagement/emoji/v1/listEmojis');
+        if (!res.ok) {
+          throw new Error(`Failed to fetch emojis: ${res.status}`);
+        }
+        const data = await res.json();
+        // Accept both {emojis: []} or an array directly
+        const list = Array.isArray(data) ? data : (Array.isArray(data.emojis) ? data.emojis : []);
+        // Ensure imageUrl present; filter invalid
+        const cleaned = list
+          .filter(e => e && e.imageUrl)
+          .map((e, idx) => ({
+            id: e.id ?? `emoji-${idx}`,
+            name: e.name ?? `emoji-${idx}`,
+            description: e.description ?? e.name ?? 'emoji',
+            imageUrl: e.imageUrl,
+            isSpecial: Boolean(e.isSpecial)
+          }));
+        if (isMounted) setEmojiList(cleaned);
+      } catch (err) {
+        console.error(err);
+        if (isMounted) setEmojiError('Unable to load emoji set from backend.');
+      } finally {
+        if (isMounted) setIsLoadingEmojis(false);
+      }
+    };
+    loadEmojis();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Split into special + regular (first isSpecial or first item as special fallback)
+  const { specialEmoji, regularEmojis } = useMemo(() => {
+    if (!emojiList || emojiList.length === 0) return { specialEmoji: null, regularEmojis: [] };
+    const special = emojiList.find(e => e.isSpecial) || emojiList[0];
+    const rest = emojiList.filter(e => e !== special);
+    return { specialEmoji: special, regularEmojis: rest };
+  }, [emojiList]);
 
   /**
    * Create a deterministic set of items for testing if a seed is provided (optional).
-   * This allows unit tests to assert counts and basic structure without relying on timing.
+   * Uses the emoji imageUrl as the visual for flying nodes.
    */
-  const makeBurstItems = useCallback((glyph, spawnOffsetX, seed = null) => {
+  const makeBurstItems = useCallback((imageUrl, spawnOffsetX, seed = null) => {
     const random = seed != null
       ? (() => {
           // Simple LCG for predictable pseudo-randoms in tests
@@ -84,7 +114,7 @@ const PlayerWithEmojiBarOnly = () => {
 
       return {
         id,
-        glyph,
+        imageUrl,
         vars: {
           '--fly-dur': `${dur.toFixed(2)}s`,
           '--fly-delay': `${delay.toFixed(2)}s`,
@@ -101,22 +131,21 @@ const PlayerWithEmojiBarOnly = () => {
   }, []);
 
   /**
-   * Spawn a burst of emojis with randomized motion seeds.
+   * Spawn a burst of emoji images with randomized motion seeds.
    * Nodes are removed automatically on animationend for proper cleanup.
-   * Ensures 3–6 visible nodes with reliable stagger and durations to avoid instant disappearance.
    */
-  const spawnEmojiBurst = useCallback((glyph, spawnOffsetX = 0) => {
-    const newItems = makeBurstItems(glyph, spawnOffsetX);
+  const spawnEmojiBurst = useCallback((imageUrl, spawnOffsetX = 0) => {
+    if (!imageUrl) return;
+    const newItems = makeBurstItems(imageUrl, spawnOffsetX);
     setFlying(prev => {
       const combined = [...prev, ...newItems];
-      // keep last 60 for overlaps while preventing leaks
       return combined.slice(-60);
     });
   }, [makeBurstItems]);
 
   /**
    * On emoji click we compute an offset so the burst appears to originate near the clicked emoji,
-   * then spawn the burst.
+   * then spawn the burst with the emoji image.
    */
   const handleEmojiClick = (emoji, evt) => {
     if (!emoji) return;
@@ -128,15 +157,13 @@ const PlayerWithEmojiBarOnly = () => {
         const btnRect = evt.currentTarget.getBoundingClientRect();
         const btnCenter = btnRect.left + btnRect.width / 2;
         const barCenter = barRect.left + barRect.width / 2;
-        // clamp offset influence to keep paths onscreen
         offsetX = Math.max(-80, Math.min(80, btnCenter - barCenter));
       } catch {
         offsetX = 0;
       }
     }
 
-    // Slightly stronger offset to better separate bursts across the row
-    spawnEmojiBurst(emoji.glyph, offsetX * 0.6);
+    spawnEmojiBurst(emoji.imageUrl, offsetX * 0.6);
   };
 
   // Helper: Alt label for accessibility
@@ -145,7 +172,7 @@ const PlayerWithEmojiBarOnly = () => {
     return `Send ${name} reaction`;
   };
 
-  // Render helper: single emoji button (Unicode-based)
+  // Render helper: single emoji button (Image-based)
   const EmojiButton = ({ emoji, isSpecial = false }) => {
     const key = emoji?.id || emoji?.name;
 
@@ -158,9 +185,16 @@ const PlayerWithEmojiBarOnly = () => {
         type="button"
         title={emoji?.description || emoji?.name || 'Reaction'}
       >
-        <span className="emoji-glyph" aria-hidden="true" style={{ fontSize: 24, display: 'block' }}>
-          {emoji.glyph}
-        </span>
+        {/* Render as image always */}
+        <img
+          className="emoji-glyph"
+          src={emoji.imageUrl}
+          alt={emoji?.description || emoji?.name || 'emoji'}
+          width={24}
+          height={24}
+          style={{ display: 'block', width: 24, height: 24, objectFit: 'contain' }}
+          crossOrigin="anonymous"
+        />
       </button>
     );
   };
@@ -169,15 +203,25 @@ const PlayerWithEmojiBarOnly = () => {
     <div className="emoji-demo-wrapper">
       {/* Faux player surface just to showcase placement */}
       <div className="emoji-demo-surface" role="img" aria-label="Mock player surface to host emoji bar">
-        <div className="emoji-demo-title">Emoji Bar Demo (hardcoded, with fly animation)</div>
+        <div className="emoji-demo-title">
+          Emoji Bar Demo (images from Flask)
+        </div>
 
         {/* Emoji Bar */}
         <div ref={barRef} className="emoji-bar visible" role="group" aria-label="Emoji reactions toolbar">
+          {/* Loading / Error state inline for clarity */}
+          {isLoadingEmojis && (
+            <div className="text-xs text-white/80 px-2 py-1">Loading emojis…</div>
+          )}
+          {emojiError && !isLoadingEmojis && (
+            <div className="text-xs text-red-300 px-2 py-1">Failed to load emojis</div>
+          )}
+
           {/* Special emoji first */}
-          {specialEmoji && <EmojiButton emoji={specialEmoji} isSpecial />}
+          {!isLoadingEmojis && !emojiError && specialEmoji && <EmojiButton emoji={specialEmoji} isSpecial />}
 
           {/* Standard set */}
-          {regularEmojis.map((e) => (
+          {!isLoadingEmojis && !emojiError && regularEmojis.map((e) => (
             <EmojiButton key={e.id} emoji={e} />
           ))}
 
@@ -207,7 +251,7 @@ const PlayerWithEmojiBarOnly = () => {
             </svg>
           </button>
 
-          {/* Transient flying emojis */}
+          {/* Transient flying emojis (render images) */}
           <div className="emoji-fly-layer" aria-hidden="true">
             {flying.map((f) => (
               <span
@@ -225,11 +269,19 @@ const PlayerWithEmojiBarOnly = () => {
                   '--rot': f.vars['--rot']
                 }}
                 onAnimationEnd={() => {
-                  // Robust cleanup in case multiple animations are attached by the browser
                   setFlying(prev => prev.filter(x => x.id !== f.id));
                 }}
               >
-                <span className="flying-emoji-wobble">{f.glyph}</span>
+                <span className="flying-emoji-wobble" aria-hidden="true">
+                  <img
+                    src={f.imageUrl}
+                    alt=""
+                    width={24}
+                    height={24}
+                    style={{ display: 'inline-block', width: 24, height: 24, objectFit: 'contain' }}
+                    crossOrigin="anonymous"
+                  />
+                </span>
               </span>
             ))}
           </div>
@@ -245,9 +297,9 @@ const PlayerWithEmojiBarOnly = () => {
  */
 export const __testables__ = {
   // Note: makeBurstItems uses a deterministic RNG when a seed is passed.
-  createBurstForTest: (componentInstance, glyph = '💖', spawnOffsetX = 0, seed = 1234) => {
+  createBurstForTest: (componentInstance, imageUrl = 'http://localhost:5050/static/sample.png', spawnOffsetX = 0, seed = 1234) => {
     return componentInstance?.makeBurstItems
-      ? componentInstance.makeBurstItems(glyph, spawnOffsetX, seed)
+      ? componentInstance.makeBurstItems(imageUrl, spawnOffsetX, seed)
       : [];
   }
 };
