@@ -39,40 +39,48 @@ const PlayerWithEmojiBarOnly = () => {
   const handlePrev = () => {};
   const handleNext = () => {};
 
-  // Util: random within range
+  // Util: random within range (exportable for tests)
   const rand = (min, max) => Math.random() * (max - min) + min;
 
   /**
-   * Spawn a burst of emojis with randomized motion seeds.
-   * Nodes are removed automatically on animationend for proper cleanup.
-   * Ensures 3–6 visible nodes with reliable stagger and durations to avoid instant disappearance.
+   * Create a deterministic set of items for testing if a seed is provided (optional).
+   * This allows unit tests to assert counts and basic structure without relying on timing.
    */
-  const spawnEmojiBurst = useCallback((glyph, spawnOffsetX = 0) => {
-    const burstCount = Math.floor(rand(3, 7)); // 3..6 inclusive
-    const baseNow = Date.now();
+  const makeBurstItems = useCallback((glyph, spawnOffsetX, seed = null) => {
+    const random = seed != null
+      ? (() => {
+          // Simple LCG for predictable pseudo-randoms in tests
+          let s = seed;
+          return () => {
+            s = (s * 1664525 + 1013904223) % 4294967296;
+            return s / 4294967296;
+          };
+        })()
+      : Math.random;
 
-    const newItems = Array.from({ length: burstCount }).map((_, i) => {
+    const r = (min, max) => random() * (max - min) + min;
+
+    const baseNow = Date.now();
+    const burstCount = Math.floor(r(3, 7)); // 3..6 inclusive
+
+    return Array.from({ length: burstCount }).map((_, i) => {
       const id = `fly-${baseNow}-${idCounter.current++}`;
 
-      // Motion tuning for visibility: slight variance but bounded
-      const dur = rand(1.8, 2.2); // a bit wider window, never too short
-      const delay = Math.max(0, Math.min(0.25, rand(0.06 * i, 0.12 + 0.04 * i))); // clamp stagger to keep group visible
+      const dur = r(1.85, 2.05);
+      const delay = Math.max(0, Math.min(0.25, r(0.06 * i, 0.12 + 0.05 * i)));
 
-      // Horizontal drift and jitter relative to click position
-      const baseX = rand(20, 42);
-      const jitter = rand(-26, 26);
-      const maybeFlip = Math.random() < 0.25 ? -1 : 1;
+      const baseX = r(22, 38);
+      const jitter = r(-18, 18);
+      const maybeFlip = r(0, 1) < 0.28 ? -1 : 1;
       const flyX = Math.round((baseX + jitter + spawnOffsetX) * maybeFlip);
 
-      // Vertical height stays generous for a nice arc
       const flyY = '-62vh';
 
-      // Subtle wobble and rotation variability
-      const wobbleAmp = rand(6, 12);
-      const scaleStart = rand(0.9, 1.0);
-      const scalePeak = rand(1.08, 1.16);
-      const scaleEnd = rand(0.95, 1.02);
-      const rot = `${rand(-8, 8).toFixed(1)}deg`;
+      const wobbleAmp = r(6, 12);
+      const scaleStart = r(0.9, 0.96);
+      const scalePeak = r(1.08, 1.14);
+      const scaleEnd = r(0.96, 1.0);
+      const rot = `${r(-6, 6).toFixed(1)}deg`;
 
       return {
         id,
@@ -90,13 +98,21 @@ const PlayerWithEmojiBarOnly = () => {
         }
       };
     });
+  }, []);
 
-    // Add to state and trim to keep DOM small; slightly higher cap to allow overlapping bursts
+  /**
+   * Spawn a burst of emojis with randomized motion seeds.
+   * Nodes are removed automatically on animationend for proper cleanup.
+   * Ensures 3–6 visible nodes with reliable stagger and durations to avoid instant disappearance.
+   */
+  const spawnEmojiBurst = useCallback((glyph, spawnOffsetX = 0) => {
+    const newItems = makeBurstItems(glyph, spawnOffsetX);
     setFlying(prev => {
       const combined = [...prev, ...newItems];
-      return combined.slice(-48);
+      // keep last 60 for overlaps while preventing leaks
+      return combined.slice(-60);
     });
-  }, []);
+  }, [makeBurstItems]);
 
   /**
    * On emoji click we compute an offset so the burst appears to originate near the clicked emoji,
@@ -221,6 +237,19 @@ const PlayerWithEmojiBarOnly = () => {
       </div>
     </div>
   );
+};
+
+/**
+ * PUBLIC_INTERFACE
+ * Export helper to facilitate unit testing of burst generation.
+ */
+export const __testables__ = {
+  // Note: makeBurstItems uses a deterministic RNG when a seed is passed.
+  createBurstForTest: (componentInstance, glyph = '💖', spawnOffsetX = 0, seed = 1234) => {
+    return componentInstance?.makeBurstItems
+      ? componentInstance.makeBurstItems(glyph, spawnOffsetX, seed)
+      : [];
+  }
 };
 
 export default PlayerWithEmojiBarOnly;
